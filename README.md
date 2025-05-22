@@ -5,11 +5,11 @@ gioui 的简单封装
 
 alarm
 
-![alarm](images/alarm.png)
+![alarm](images/alarm.jpg)
 
 push
 
-![push](images/push.png)
+![push](images/push.jpg)
 
 
 
