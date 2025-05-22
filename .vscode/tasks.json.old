@@ -1,0 +1,49 @@
+{
+    // See Tasks in visual Studio Code
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "echoCommand":true,//是否显示命令
+    "showOutput": "always",
+    "suppressTaskName": true,//
+    "tasks": [
+        { 
+            "taskName": "build",
+            "isBuildCommand": true,
+            "command": "bash",
+            "args":["gobuild.sh","${fileDirname}"]
+        },
+        { 
+            "taskName": "build_windows",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","windows"]
+        },
+        { 
+            "taskName": "build_win32",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","win32"]
+        },
+        { 
+            "taskName": "build arm",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","arm"]
+        },{ 
+            "taskName": "run",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","run"]
+        },{ 
+            "taskName": "go run",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","runcode"]
+        },{ 
+            "taskName": "generate",
+            "command":  "bash",
+            "args":["gobuild.sh","${fileDirname}","generate"]
+        },{ 
+            "taskName": "test",
+            "command":  "bash",
+            "isTestCommand": true,
+            "args":["gobuild.sh","${fileDirname}","test"]
+        }
+      ]
+}

@@ -1,0 +1,103 @@
+{
+    // See Tasks in visual Studio Code
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "echoCommand": true, //
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build_windows",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "windows"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_win32",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "win32"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build arm",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "arm"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "run"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "go run",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "runcode"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "generate",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "generate"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "gobuild.sh",
+                "${fileDirname}",
+                "test"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
+        }
+    ]
+}
