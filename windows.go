@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 23:59:39
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 16:36:28
+ * @LastEditTime: 2025-05-23 18:22:38
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\windows.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -10,6 +10,7 @@ package gui
 
 import (
 	"os"
+	"strings"
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
@@ -98,6 +99,7 @@ type Window struct {
 	statusBar        //状态栏
 	dataDir   string // 数据目录
 
+	onClose func() // 关闭窗口事件
 }
 
 // NewUI creates a new UI using the Go Fonts.
@@ -140,6 +142,16 @@ func (m *Window) Option(opts ...app.Option) {
 
 func (m *Window) DataDir() string {
 	return m.dataDir
+}
+
+// 设置关闭时的操作
+func (m *Window) SetOnClose(cb func()) {
+	m.onClose = cb
+}
+
+// 重新设置新的数据目录文件
+func (m *Window) SetDataDir(dir string) {
+	m.dataDir = strings.TrimSuffix(dir, "/")
 }
 
 func (m *Window) Log(v ...any) {
@@ -343,7 +355,11 @@ func (m *Window) Run() error {
 func Run(init func() *Window) {
 	go func() {
 		win := init()
-		if err := win.Run(); err != nil {
+		err := win.Run()
+		if win.onClose != nil {
+			win.onClose()
+		}
+		if err != nil {
 			win.Log(err)
 			os.Exit(1)
 		}
