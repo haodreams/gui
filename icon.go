@@ -29,7 +29,7 @@ var ErrorIcon *widget.Icon = func() *widget.Icon {
 }()
 
 var DeleteIcon *widget.Icon = func() *widget.Icon {
-	icon, _ := widget.NewIcon(icons.ActionDelete)
+	icon, _ := widget.NewIcon(icons.ActionDeleteForever)
 	return icon
 }()
 

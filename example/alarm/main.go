@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-21 00:00:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 19:00:03
+ * @LastEditTime: 2025-05-24 01:45:21
  * @FilePath: \gui\example\demo1.go
  * @Description:
  */
@@ -47,7 +47,7 @@ func Init() *gui.Window {
 	win := gui.NewWindow(gui.WithLog(log.Println))
 	win.Option(
 		app.Title("Alarm test"),
-		app.Size(unit.Dp(800), unit.Dp(600)),
+		app.Size(unit.Dp(400), unit.Dp(700)),
 	)
 
 	boss.Init(win)

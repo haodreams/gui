@@ -1,3 +1,11 @@
+/*
+ * @Author: wangjun haodreams@163.com
+ * @Date: 2025-05-23 20:18:06
+ * @LastEditors: wangjun haodreams@163.com
+ * @LastEditTime: 2025-05-23 23:24:15
+ * @FilePath: \gui\example\alarm\page_push.go
+ * @Description:
+ */
 package main
 
 import (
@@ -22,17 +30,25 @@ func (m *PagePush) Setup(w *gui.Window, name, title string) {
 	m.Page.Setup(w, name, title)
 	root := gui.NewContainer(m.Parent()).SetVertical()
 	root.AddWidget(gui.NewLabel(w, "消息模拟发送测试:"))
-	editTitle := gui.NewTextField(w, "消息标题")
-	var edit *gui.TextField
-	var conta *gui.Container
-	conta, edit = NewEdit(w, "消息内容", "测试", func(s string) {
+	editTitle := gui.NewEdit(w, "消息标题")
+	editMsg := gui.NewEdit(w, "消息内容")
+
+	root.AddWidget(editTitle)
+	root.AddWidget(editMsg)
+	level := gui.NewRadioGroup(w, []string{"info", "warn", "error"},
+		[]string{"提示 ", "告警 ", "错误 "}).SetValue("info")
+
+	btns := gui.NewContainer(w)
+	btns.AddWidget(level)
+	btns.Add(gui.NewSpace(10, 10))
+	btns.AddWidget(gui.NewButton(w, "提交", func() {
 		title := editTitle.Text()
 		title = strings.TrimSpace(title)
 		if title == "" {
 			w.Error("输入错误", "标题不能为空")
 			return
 		}
-		msg := edit.Text()
+		msg := editMsg.Text()
 		msg = strings.TrimSpace(msg)
 		if msg == "" {
 			w.Error("输入错误", "输入内容不能为空")
@@ -40,12 +56,20 @@ func (m *PagePush) Setup(w *gui.Window, name, title string) {
 		}
 		now := time.Now().Format("15:04:05")
 
-		boss.msg.AddMsg(title, now, msg, boss.info)
-		boss.win.Info("提示", "添加完成")
-	})
+		icon := boss.info
+		switch level.Value {
+		case "info":
+			icon = boss.info
+		case "warn":
+			icon = boss.warn
+		case "error":
+			icon = boss.erron
+		}
 
-	root.AddWidget(editTitle)
-	root.AddWidget(conta)
+		boss.msg.AddMsg(title, now, msg, icon)
+		boss.win.Info("提示", "添加完成")
+	}))
+	root.AddWidget(btns)
 
 	root.AddWidget(gui.NewButton(w, "获取数据目录", func() {
 		w.Info("数据目录", w.DataDir())

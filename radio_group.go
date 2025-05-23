@@ -34,6 +34,11 @@ func NewRadioGroup(win *Window, keys, values []string) *RadioGroup {
 	return m
 }
 
+func (m *RadioGroup) SetValue(v string) *RadioGroup {
+	m.Value = v
+	return m
+}
+
 func (m *RadioGroup) SetAxis(axis layout.Axis) *RadioGroup {
 	m.Axis = axis
 	return m

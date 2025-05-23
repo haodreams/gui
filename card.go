@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:58:38
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 18:53:20
+ * @LastEditTime: 2025-05-23 22:55:08
  * @FilePath: \goui\gui\container.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -10,7 +10,6 @@ package gui
 
 import (
 	"image"
-	"image/color"
 	"sync/atomic"
 
 	"gioui.org/layout"
@@ -43,7 +42,7 @@ func NewCard(win *Window, title, time, msg string) *Card {
 	m.title = NewLabel(win, title).UniformInset(1).SetInsetLeft(5)
 	m.time = NewLabel(win, time).UniformInset(1).SetInsetRight(5)
 	m.msg = NewLabel(win, msg).UniformInset(1).SetInsetLeft(5)
-	m.split = NewSplit(color.NRGBA{R: 200, G: 200, B: 200, A: 200})
+	m.split = NewSplit()
 	m.split.Left = 5
 	m.time.TextSize -= 2
 	m.msg.TextSize -= 2

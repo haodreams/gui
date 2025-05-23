@@ -21,6 +21,9 @@ type Edit struct {
 	Widget[Edit]
 	hint string
 	widget.Editor
+	blur    func(string) //失去光标的回调函数
+	focused bool         //当前是否有焦点，判断失去焦点的条件
+
 	onSubmit func(string)
 }
 
@@ -32,6 +35,12 @@ func NewEdit(win *Window, hint string) *Edit {
 	m.hint = hint
 	return m
 }
+
+func (m *Edit) SetBlur(f func(string)) *Edit {
+	m.blur = f
+	return m
+}
+
 func (m *Edit) SetMask(mask rune) *Edit {
 	m.Mask = mask
 	return m
@@ -54,6 +63,17 @@ func (m *Edit) SetSigleLine(singleLine bool) *Edit {
 }
 
 func (m *Edit) Layout(gtx layout.Context) layout.Dimensions {
+	if m.blur != nil {
+		if gtx.Source.Focused(&m.Editor) {
+			m.focused = true
+		} else {
+			if m.focused {
+				m.focused = false
+				m.blur(m.Text())
+			}
+		}
+	}
+
 	if m.Editor.Submit {
 		for {
 			e, ok := m.Editor.Update(gtx)

@@ -18,6 +18,8 @@ type TextField struct {
 	Widget[TextField]
 	hint string
 	component.TextField
+	blur     func(string) //失去光标的回调函数
+	focused  bool         //当前是否有焦点，判断失去焦点的条件
 	onSubmit func(string)
 }
 
@@ -27,6 +29,11 @@ func NewTextField(win *Window, hint string) *TextField {
 	m.Inset = win.TextFieldInset
 	m.SingleLine = true
 	m.hint = hint
+	return m
+}
+
+func (m *TextField) SetBlur(f func(string)) *TextField {
+	m.blur = f
 	return m
 }
 
@@ -52,6 +59,17 @@ func (m *TextField) SetSigleLine(singleLine bool) *TextField {
 }
 
 func (m *TextField) Layout(gtx layout.Context) D {
+	if m.blur != nil {
+		if gtx.Source.Focused(&m.Editor) {
+			m.focused = true
+		} else {
+			if m.focused {
+				m.focused = false
+				m.blur(m.TextField.Text())
+			}
+		}
+	}
+
 	if m.TextField.Submit {
 		for {
 			e, ok := m.Editor.Update(gtx)
@@ -66,32 +84,6 @@ func (m *TextField) Layout(gtx layout.Context) D {
 		}
 	}
 
-	// if m.SingleLine {
-	// 	gtx.Constraints.Min = image.Pt(m.MaxWidth, m.MaxHeight)
-	// 	gtx.Constraints.Max = image.Pt(m.MaxWidth, m.MaxHeight)
-	// } else {
-	// 	if m.MaxWidth != 0 {
-	// 		gtx.Constraints.Min.X = m.MaxWidth
-	// 		gtx.Constraints.Max.X = m.MaxWidth
-	// 	}
-	// 	if m.MaxHeight != 0 {
-	// 		gtx.Constraints.Min.Y = m.MaxHeight
-	// 		gtx.Constraints.Max.Y = m.MaxHeight
-	// 	}
-	// }
 	m.CheckDimensions(&gtx)
-
 	return m.TextField.Layout(gtx, m.Theme(), m.hint)
-	// borderWidth := float32(0.5)
-	// borderColor := color.NRGBA{A: 200}
-	// switch {
-	// case gtx.Source.Focused(&m.TextField):
-	// 	borderColor = m.Theme().Palette.ContrastBg
-	// 	borderWidth = 2
-	// }
-	// border := widget.Border{Color: borderColor, CornerRadius: unit.Dp(2), Width: unit.Dp(borderWidth)}
-	// return border.Layout(gtx, func(gtx C) D {
-
-	// 	return layout.UniformInset(unit.Dp(5)).Layout(gtx, material.TextFieldor(m.Theme(), &m.TextFieldor, m.text).Layout)
-	// })
 }
