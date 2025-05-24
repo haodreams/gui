@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 23:59:39
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 12:41:13
+ * @LastEditTime: 2025-05-24 13:45:59
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\windows.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -35,13 +35,13 @@ type Window struct {
 	prompt    *MessageBox //消息对话框
 	*explorer.Explorer
 
-	width      int                // 窗口宽度
-	height     int                // 窗口高度
-	statusBar                     //状态栏
-	dataDir    string             // 数据目录
-	Shield                        // 屏蔽层
-	onClose    func()             // 关闭窗口事件
-	onWinEvent func(focused bool) // 出现窗口事件
+	width     int               // 窗口宽度
+	height    int               // 窗口高度
+	statusBar                   //状态栏
+	dataDir   string            // 数据目录
+	Shield                      // 屏蔽层
+	onClose   func()            // 关闭窗口事件
+	onEvent   func(event.Event) // 出现窗口事件
 }
 
 // NewUI creates a new UI using the Go Fonts.
@@ -92,8 +92,8 @@ func (m *Window) SetOnClose(cb func()) {
 	m.onClose = cb
 }
 
-func (m *Window) SetOnWinEvent(cb func(bool)) {
-	m.onWinEvent = cb
+func (m *Window) SetOnEvent(cb func(event.Event)) {
+	m.onEvent = cb
 }
 
 // 重新设置新的数据目录文件
@@ -290,16 +290,15 @@ func (m *Window) Run() error {
 			gtx := app.NewContext(&ops, e)
 			m.layout(gtx)
 			e.Frame(gtx.Ops)
-		case app.ConfigEvent:
-			//检查窗口是否有焦点
-			if m.onWinEvent != nil {
-				m.onWinEvent(e.Config.Focused)
-			}
 		case app.DestroyEvent:
 			if m.onClose != nil {
 				m.onClose()
 			}
 			return e.Err
+		default:
+			if m.onEvent != nil {
+				m.onEvent(et)
+			}
 		}
 	}
 }
