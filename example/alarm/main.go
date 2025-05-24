@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-21 00:00:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 11:30:07
+ * @LastEditTime: 2025-05-24 22:55:06
  * @FilePath: \gui\example\demo1.go
  * @Description:
  */
@@ -87,10 +87,15 @@ func (m *Boss) Init(win *gui.Window) {
 }
 
 func (m *Boss) PushMsg(app string, time int64, level, title, text string) {
+	do := func(card *gui.Card) {
+		log.Println("cart id:", card.ID(), card.Msg())
+		m.win.Info(card.Title(), card.Msg())
+	}
+
 	if app != "" {
 		title = fmt.Sprintf("%s:%s", app, title)
 	}
-	cart := gui.NewCard(m.win, time, title, text).SetImage(m.info)
+	cart := gui.NewCard(m.win, time, title, text).SetImage(m.info).SetOnClick(do)
 	cart.SetLevel(level)
 	level = strings.ToLower(level)
 	switch level {

@@ -54,8 +54,3 @@ func (m *PageMsg) Setup(w *gui.Window, name, title string) {
 	m.SetContent(content)
 }
 
-func (m *PageMsg) do(card *gui.Card) {
-	log.Println("cart id:", card.ID(), card.Msg())
-	m.Parent().Info(card.Title(), card.Msg())
-}
-

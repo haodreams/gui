@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:58:38
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 21:15:30
+ * @LastEditTime: 2025-05-24 22:52:07
  * @FilePath: \goui\gui\container.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -33,7 +33,7 @@ type Card struct {
 	level     string             //级别
 	timeStamp int64              //时间戳
 	tsFormat  func(int64) string //时间戳格式化函数(默认是时间戳转时间字符串)
-	f         func(card *Card)
+	onClick         func(card *Card)
 	id        int //删除的识别字段
 	widget.Clickable
 }
@@ -93,8 +93,8 @@ func (m *Card) ID() int {
 	return m.id
 }
 
-func (m *Card) OnClick(f func(card *Card)) *Card {
-	m.f = f
+func (m *Card) SetOnClick(onClick func(card *Card)) *Card {
+	m.onClick = onClick
 	return m
 }
 
@@ -153,10 +153,10 @@ func (m *Card) Msg() string {
 }
 
 func (m *Card) Layout(gtx C) D {
-	if m.f != nil {
+	if m.onClick != nil {
 		if m.Clicked(gtx) {
 			//m.win.Log("Card Clicked")
-			m.f(m)
+			m.onClick(m)
 		}
 	}
 
