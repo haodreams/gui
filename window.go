@@ -255,13 +255,11 @@ func (m *Window) layout(gtx C) D {
 				}),
 			)
 		}),
-
-		//显示对话框
-		layout.Expanded(func(gtx C) D {
-			return m.prompt.Layout(gtx, m.width, m.height)
-		}),
-		layout.Expanded(func(gtx C) D {
+		layout.Expanded(func(gtx C) D {//绘制屏蔽层
 			return m.Shield.Layout(gtx)
+		}),		
+		layout.Expanded(func(gtx C) D {//显示对话框的级别应该最高
+			return m.prompt.Layout(gtx, m.width, m.height)
 		}),
 	)
 }
