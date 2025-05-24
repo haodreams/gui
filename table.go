@@ -236,7 +236,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 				if e.Buttons == pointer.ButtonSecondary {
 					m.rRowIdx = row
 					m.rColIdx = col
-					m.win.Log("right click", row, col)
+					//m.win.Log("right click", row, col)
 				}
 			}
 

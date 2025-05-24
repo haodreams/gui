@@ -172,7 +172,7 @@ func (m *MessageBox) Layout(gtx layout.Context, width, height int) D {
 		return D{}
 	}
 	if m.Scrim.Clicked(gtx) {
-		m.win.Log("click scrim")
+		//m.win.Log("click scrim")
 	}
 	d1 := m.Scrim.Layout(gtx, m.Theme())
 

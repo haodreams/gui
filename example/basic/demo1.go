@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-21 00:00:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 14:34:40
+ * @LastEditTime: 2025-05-24 16:12:36
  * @FilePath: \gui\example\demo1.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -10,7 +10,6 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"gioui.org/app"
 	"gioui.org/layout"
@@ -38,7 +37,7 @@ func Init() *gui.Window {
 	header.Add(gui.NewSpace(8))
 
 	button := gui.NewButton(win, "60%", func() {
-		win.Log(time.Now())
+		//win.Log(time.Now())
 		progress.SetProgress(0.6) // 60%
 		win.SetStatusBarText("OK")
 
