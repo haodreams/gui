@@ -79,6 +79,8 @@ func (m *TextField) Layout(gtx layout.Context) D {
 			if e, ok := e.(widget.SubmitEvent); ok {
 				if m.onSubmit != nil {
 					m.onSubmit(e.Text)
+				}else if m.blur != nil{
+					m.blur(e.Text)
 				}
 			}
 		}
