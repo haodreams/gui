@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 23:59:39
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-23 18:22:38
+ * @LastEditTime: 2025-05-24 12:41:13
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\windows.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -18,71 +18,12 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"gioui.org/x/explorer"
 )
 
 type Contenter interface {
 	Layout(gtx C) D
-}
-type Config struct {
-	theme          *material.Theme
-	ButtonInset    layout.Inset
-	CheckboxInset  layout.Inset
-	EditInset      layout.Inset
-	LabelInset     layout.Inset
-	TextFieldInset layout.Inset
-	SelectInset    layout.Inset
-	TabsInset      layout.Inset
-	insetInited    bool // 初始化过Inset
-	showStatusBar  bool
-	plugin         func(*app.Window) event.Event
-	logf           func(v ...any)
-}
-
-type Option func(*Config)
-
-// NewConfig returns a new Config with default values.
-func Inset(v unit.Dp) Option {
-	return func(m *Config) {
-		m.ButtonInset = layout.UniformInset(v)
-		m.CheckboxInset = layout.UniformInset(v)
-		m.EditInset = layout.UniformInset(v)
-		m.LabelInset = layout.UniformInset(v)
-		m.TextFieldInset = layout.UniformInset(v)
-		m.SelectInset = layout.UniformInset(v)
-		m.TabsInset = layout.UniformInset(v)
-		m.TabsInset.Right += 10
-		m.TabsInset.Left += 10
-		m.insetInited = true
-	}
-}
-
-// 设置主题
-func ThemeShaper(ts *text.Shaper) Option {
-	return func(m *Config) {
-		m.theme.Shaper = ts
-	}
-}
-
-// 隐藏状态栏
-func HideStatusBar() Option {
-	return func(m *Config) {
-		m.showStatusBar = false
-	}
-}
-
-func WithLog(f func(v ...any)) Option {
-	return func(m *Config) {
-		m.logf = f
-	}
-}
-
-func WithPlugin(plugin func(*app.Window) event.Event) Option {
-	return func(m *Config) {
-		m.plugin = plugin
-	}
 }
 
 // Window holds all of the application state.
@@ -94,12 +35,13 @@ type Window struct {
 	prompt    *MessageBox //消息对话框
 	*explorer.Explorer
 
-	width     int    // 窗口宽度
-	height    int    // 窗口高度
-	statusBar        //状态栏
-	dataDir   string // 数据目录
-
-	onClose func() // 关闭窗口事件
+	width      int                // 窗口宽度
+	height     int                // 窗口高度
+	statusBar                     //状态栏
+	dataDir    string             // 数据目录
+	Shield                        // 屏蔽层
+	onClose    func()             // 关闭窗口事件
+	onWinEvent func(focused bool) // 出现窗口事件
 }
 
 // NewUI creates a new UI using the Go Fonts.
@@ -125,6 +67,7 @@ func NewWindow(opts ...Option) *Window {
 	m.prompt = NewMessage(m, "", "", ModalInfo)       // 创建消息对话框
 	m.statusBar.Init(m).show = m.Config.showStatusBar // 初始化状态栏, 显示状态栏
 	m.Explorer = explorer.NewExplorer(m.win)          // 初始化文件浏览器
+	m.Shield.SetColor(m.theme.Bg)                     // 设置屏蔽层颜色
 
 	var err error
 	m.dataDir, err = app.DataDir() //
@@ -147,6 +90,10 @@ func (m *Window) DataDir() string {
 // 设置关闭时的操作
 func (m *Window) SetOnClose(cb func()) {
 	m.onClose = cb
+}
+
+func (m *Window) SetOnWinEvent(cb func(bool)) {
+	m.onWinEvent = cb
 }
 
 // 重新设置新的数据目录文件
@@ -313,6 +260,9 @@ func (m *Window) layout(gtx C) D {
 		layout.Expanded(func(gtx C) D {
 			return m.prompt.Layout(gtx, m.width, m.height)
 		}),
+		layout.Expanded(func(gtx C) D {
+			return m.Shield.Layout(gtx)
+		}),
 	)
 }
 
@@ -333,19 +283,22 @@ func (m *Window) Run() error {
 			et = m.win.Event()
 		}
 		m.Explorer.ListenEvents(et)
+
 		// detect the type of the event.
 		switch e := et.(type) {
-		// this is sent when the application should re-render.
 		case app.FrameEvent:
-			// gtx is used to pass around rendering and event information.
 			gtx := app.NewContext(&ops, e)
 			m.layout(gtx)
-			//m.container.Layout(gtx)
-			// render and handle the operations from the UI.
 			e.Frame(gtx.Ops)
-
-		// this is sent when the application is closed.
+		case app.ConfigEvent:
+			//检查窗口是否有焦点
+			if m.onWinEvent != nil {
+				m.onWinEvent(e.Config.Focused)
+			}
 		case app.DestroyEvent:
+			if m.onClose != nil {
+				m.onClose()
+			}
 			return e.Err
 		}
 	}
@@ -356,11 +309,7 @@ func Run(init func() *Window) {
 	go func() {
 		win := init()
 		err := win.Run()
-		if win.onClose != nil {
-			win.onClose()
-		}
 		if err != nil {
-			win.Log(err)
 			os.Exit(1)
 		}
 		os.Exit(0)

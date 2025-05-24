@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-21 00:00:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 01:45:21
+ * @LastEditTime: 2025-05-24 11:30:07
  * @FilePath: \gui\example\demo1.go
  * @Description:
  */
@@ -12,7 +12,6 @@ import (
 	"embed"
 	"image"
 	"log"
-	"runtime"
 
 	"gioui.org/app"
 	"gioui.org/unit"
@@ -37,10 +36,9 @@ type Boss struct {
 	me   *PageMe
 
 	//icons
-	info   image.Image
-	warn   image.Image
-	erron  image.Image
-	offset unit.Dp //windows = 10 android = 13
+	info  image.Image
+	warn  image.Image
+	erron image.Image
 }
 
 func Init() *gui.Window {
@@ -65,13 +63,14 @@ func main() {
 
 func (m *Boss) Init(win *gui.Window) {
 	m.win = win
+	m.win.SetOnClose(func() {
+		log.Println("on close")
+	})
 	log.Println("data dir:", win.DataDir())
 	m.loadJpeg()
-	if runtime.GOOS == "android" {
-		boss.offset = 13
-	} else {
-		boss.offset = 10
-	}
+	m.win.Shield.Show()
+	m.win.Shield.SetContent(NewLoginDialog(win))
+
 	boss.man = NewPageMain(win, "main", "首页")
 	boss.msg = NewPageMsg(win, "msg", "通知")
 	boss.push = NewPagePush(win, "push", "推送")
