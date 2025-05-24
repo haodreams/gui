@@ -12,16 +12,16 @@ import (
 type Shield struct {
 	widget.Clickable
 	color   color.NRGBA
-	hide    bool
+	show    bool
 	content Contenter
 }
 
 func (m *Shield) Hide() *Shield {
-	m.hide = true
+	m.show = false
 	return m
 }
 func (m *Shield) Show() *Shield {
-	m.hide = false
+	m.show = true
 	return m
 }
 
@@ -44,7 +44,7 @@ func (m *Shield) SetColor(c color.NRGBA) *Shield {
 // Layout draws the scrim using the provided animation. If the animation indicates
 // that the scrim is not visible, this is a no-op.
 func (m *Shield) Layout(gtx layout.Context) D {
-	if m.hide {
+	if !m.show {
 		return D{}
 	}
 	if m.content == nil {
