@@ -9,6 +9,8 @@
 package gui
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget/material"
@@ -32,6 +34,16 @@ func NewLabel(win *Window, text string) *Label {
 
 func (m *Label) SetAlignment(alig text.Alignment) *Label {
 	m.LabelStyle.Alignment = alig
+	return m
+}
+
+func (m *Label) SetColor(color color.NRGBA) *Label {
+	m.LabelStyle.Color = color
+	return m
+}
+
+func (m *Label) SetStyle(style material.LabelStyle) *Label {
+	m.LabelStyle = style
 	return m
 }
 
