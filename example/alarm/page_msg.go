@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2025-05-23 20:18:06
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 01:43:00
+ * @LastEditTime: 2025-05-24 10:06:12
  * @FilePath: \gui\example\alarm\page_msg.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -18,7 +18,7 @@ import (
 
 type PageMsg struct {
 	gui.Page
-	list *gui.List
+	list *gui.FixList
 }
 
 func NewPageMsg(w *gui.Window, name, title string) *PageMsg {
@@ -48,7 +48,7 @@ func (m *PageMsg) Setup(w *gui.Window, name, title string) {
 	content.Add(gui.NewSpace(5, 5))
 	content.AddWidget(gui.NewSplit().SetHeight(2)) //加上分割线
 
-	m.list = gui.NewList(m.Parent())
+	m.list = gui.NewFixList(m.Parent(), 500).SetDesc(true)
 	m.list.Axis = layout.Vertical
 	m.AddMsg("Info", "18:04:21", "这是一条提示信息", boss.info)
 	m.AddMsg("Warn", "18:07:25", "这是一条警告信息", boss.warn)
