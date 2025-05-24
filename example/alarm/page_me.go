@@ -49,7 +49,7 @@ func (m *PageMe) Setup(w *gui.Window, name, title string) {
 // 	edit := gui.NewTextField(w, editHint)
 // 	btn := gui.NewButton(w, btnTitle, func() {
 // 		f(edit.Text())
-// 	}).UniformInset(boss.offset)
+// 	}).UniformInset(m.offset)
 // 	content := gui.NewContainer(w).SetAlignment(layout.Baseline) //从底部对齐
 // 	content.AddWidget(edit, 1)
 // 	content.AddWidget(btn)
@@ -89,6 +89,6 @@ func AddMsgWidgets(w *gui.Window, parent *gui.Container) {
 	// content.AddWidget(gui.NewButton(w, "应用", func() {
 	// 	w.Info("测试", "订阅消息通知成功")
 	// 	w.Log("应用")
-	// }).UniformInset(boss.offset))
+	// }).UniformInset(m.offset))
 	// parent.AddWidget(content)
 }

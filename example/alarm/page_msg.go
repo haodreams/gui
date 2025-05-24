@@ -9,7 +9,6 @@
 package main
 
 import (
-	"image"
 	"log"
 
 	"gioui.org/layout"
@@ -50,9 +49,6 @@ func (m *PageMsg) Setup(w *gui.Window, name, title string) {
 
 	m.list = gui.NewFixList(m.Parent(), 500).SetDesc(true)
 	m.list.Axis = layout.Vertical
-	m.AddMsg("Info", "18:04:21", "这是一条提示信息", boss.info)
-	m.AddMsg("Warn", "18:07:25", "这是一条警告信息", boss.warn)
-	m.AddMsg("Error", "18:09:36", "这是一条错误信息", boss.erron)
 
 	content.AddWidget(m.list)
 	m.SetContent(content)
@@ -63,7 +59,3 @@ func (m *PageMsg) do(card *gui.Card) {
 	m.Parent().Info(card.Title(), card.Msg())
 }
 
-func (m *PageMsg) AddMsg(title, time, msg string, icon image.Image) {
-	item := gui.NewCard(m.Parent(), title, time, msg).OnClick(m.do).SetImage(icon)
-	m.list.AddItem(item)
-}

@@ -156,3 +156,34 @@ func (m *FixArray[G]) Pop() (e *G, err error) {
 	m.size--
 	return
 }
+
+
+// 先进后出
+func (m *FixArray[G]) Stack(begin, limit int) []*G {
+	count := m.Size()
+	if count == 0 {
+		return nil
+	}
+	if limit == -1 {
+		limit = count
+	}
+	if limit > count {
+		limit = count
+	}
+	end := min(begin+limit, count)
+	if end <= begin {
+		return nil
+	}
+	limit = end - begin
+
+	rows := make([]*G, limit)
+	ii := 0
+
+		for i := begin; i < end; i++ {
+			pos := ((m.cap + m.pos) - uint(i) - 1) % m.cap
+			p := m.array[pos]
+			rows[ii] = p
+			ii++
+		}
+	return rows[:ii]
+}

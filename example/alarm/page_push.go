@@ -54,19 +54,8 @@ func (m *PagePush) Setup(w *gui.Window, name, title string) {
 			w.Error("输入错误", "输入内容不能为空")
 			return
 		}
-		now := time.Now().Format("15:04:05")
-
-		icon := boss.info
-		switch level.Value {
-		case "info":
-			icon = boss.info
-		case "warn":
-			icon = boss.warn
-		case "error":
-			icon = boss.erron
-		}
-
-		boss.msg.AddMsg(title, now, msg, icon)
+		now := time.Now().Unix()
+		boss.PushMsg("测试", now, level.Value, title, msg)
 		boss.win.Info("提示", "添加完成")
 	}))
 	root.AddWidget(btns)

@@ -10,8 +10,11 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"image"
 	"log"
+	"strings"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/unit"
@@ -71,15 +74,41 @@ func (m *Boss) Init(win *gui.Window) {
 	m.win.Shield.Show()
 	m.win.Shield.SetContent(NewLoginDialog(win))
 
-	boss.man = NewPageMain(win, "main", "首页")
-	boss.msg = NewPageMsg(win, "msg", "通知")
-	boss.push = NewPagePush(win, "push", "推送")
-	boss.me = NewPageMe(win, "me", "我的")
+	m.man = NewPageMain(win, "main", "首页")
+	m.msg = NewPageMsg(win, "msg", "通知")
+	m.push = NewPagePush(win, "push", "推送")
+	m.me = NewPageMe(win, "me", "我的")
+
+	now := time.Now().Unix()
+	m.PushMsg("", now-86400*5, "info", "Info", "这是一条提示信息")
+	m.PushMsg("", now-86500, "warn", "Warn", "这是一条警告信息")
+	m.PushMsg("", now, "error", "Error", "这是一条错误信息")
+
+}
+
+func (m *Boss) PushMsg(app string, time int64, level, title, text string) {
+	if app != "" {
+		title = fmt.Sprintf("%s:%s", app, title)
+	}
+	cart := gui.NewCard(m.win, time, title, text).SetImage(m.info)
+	cart.SetLevel(level)
+	level = strings.ToLower(level)
+	switch level {
+	case "info":
+		cart.SetImage(m.info)
+	case "warn":
+		cart.SetImage(m.warn)
+	case "error":
+		cart.SetImage(m.erron)
+	default: //TODO 加载自定义的图像
+		cart.SetImage(m.info)
+	}
+	m.msg.list.AddItem(cart)
 }
 
 func (m *Boss) GetPages() (titles []string, contents []gui.Contenter) {
-	titles = []string{boss.man.Title(), boss.msg.Title(), boss.push.Title(), boss.me.Title()}
-	contents = []gui.Contenter{boss.man, boss.msg, boss.push, boss.me}
+	titles = []string{m.man.Title(), m.msg.Title(), m.push.Title(), m.me.Title()}
+	contents = []gui.Contenter{m.man, m.msg, m.push, m.me}
 	return
 }
 
