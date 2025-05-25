@@ -128,6 +128,17 @@ func (m *Window) SetTitle(title string) {
 	m.win.Option(app.Title(title))
 }
 
+func (m *Window)ShowShield(){
+	m.Shield.Show()
+	m.Invalidate()
+}
+
+func (m *Window)HideShield(){
+	m.Shield.Hide()
+	m.Invalidate()
+}
+
+
 func (m *Window) Info(title string, contant string) {
 	m.MessageBox(title, contant, ModalInfo)
 }
