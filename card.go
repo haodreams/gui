@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:58:38
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 22:52:07
+ * @LastEditTime: 2025-05-25 10:40:01
  * @FilePath: \goui\gui\container.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -30,6 +30,7 @@ type Card struct {
 	time      *Label
 	msg       *Label
 	split     *Split
+	State int //设置当前卡片的状态
 	level     string             //级别
 	timeStamp int64              //时间戳
 	tsFormat  func(int64) string //时间戳格式化函数(默认是时间戳转时间字符串)
@@ -131,7 +132,7 @@ func (m *Card) SetTime(time int64) *Card {
 }
 
 func (m *Card) SetStringTime(time string) *Card {
-	m.time.text = time
+	m.time.Text = time
 	return m
 }
 
@@ -145,7 +146,7 @@ func (m *Card) Time() int64 {
 }
 
 func (m *Card) Title() string {
-	return m.title.text
+	return m.title.Text
 }
 
 func (m *Card) Msg() string {
@@ -170,7 +171,7 @@ func (m *Card) Layout(gtx C) D {
 					return m.right.Layout(gtx, //上下排列
 						layout.Rigid(func(gtx C) D {
 							if m.tsFormat != nil {
-								m.time.text = m.tsFormat(m.timeStamp)
+								m.time.Text = m.tsFormat(m.timeStamp)
 							}
 							return m.top.Layout(gtx, layout.Rigid(m.title.Layout), layout.Rigid(m.time.Layout)) //左右排列 标题和时间
 						}),
@@ -187,7 +188,7 @@ func (m *Card) Layout(gtx C) D {
 		return m.right.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if m.tsFormat != nil {
-					m.time.text = m.tsFormat(m.timeStamp)
+					m.time.SetText(m.tsFormat(m.timeStamp))
 				}
 				return m.top.Layout(gtx, layout.Rigid(m.title.Layout), layout.Rigid(m.time.Layout)) //左右排列 标题和时间
 			}),

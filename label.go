@@ -19,17 +19,20 @@ import (
 type Label struct {
 	Widget[Label]
 	material.LabelStyle
-	text string
 }
 
 func NewLabel(win *Window, text string) *Label {
 	m := new(Label)
-	m.text = text
 	m.win = win
 	m.Init(win, m)
 	m.Inset = win.LabelInset
-	m.LabelStyle = material.Body1(m.Theme(), m.text)
+	m.LabelStyle = material.Body1(m.Theme(), text)
 	return m
+}
+
+func (m *Label)SetText(text string) *Label {
+	m.LabelStyle.Text = text
+	return m	
 }
 
 func (m *Label) SetAlignment(alig text.Alignment) *Label {
@@ -43,12 +46,15 @@ func (m *Label) SetColor(color color.NRGBA) *Label {
 }
 
 func (m *Label) SetStyle(style material.LabelStyle) *Label {
+	text :=m.LabelStyle.Text
 	m.LabelStyle = style
+	m.LabelStyle.Text = text
 	return m
 }
 
 func (m *Label) SetH6() *Label {
-	m.LabelStyle = material.H6(m.Theme(), m.text)
+	text :=m.LabelStyle.Text
+	m.LabelStyle = material.H6(m.Theme(), text)
 	return m
 }
 
