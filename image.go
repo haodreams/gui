@@ -141,5 +141,5 @@ func (m *Image) Layout(gtx layout.Context) D {
 	}
 
 	m.CheckDimensions(&gtx)
-	return m.Image.Layout(gtx)
+	return m.Inset.Layout(gtx, m.Image.Layout)
 }

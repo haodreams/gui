@@ -30,11 +30,11 @@ type Card struct {
 	time      *Label
 	msg       *Label
 	split     *Split
-	State int //设置当前卡片的状态
+	State     int                //设置当前卡片的状态
 	level     string             //级别
 	timeStamp int64              //时间戳
 	tsFormat  func(int64) string //时间戳格式化函数(默认是时间戳转时间字符串)
-	onClick         func(card *Card)
+	onClick   func(card *Card)
 	id        int //删除的识别字段
 	widget.Clickable
 }
@@ -44,14 +44,14 @@ func NewCard(win *Window, ts int64, title, msg string) *Card {
 	m.Init(win, m)
 	m.top.Spacing = layout.SpaceBetween
 	m.right.Axis = layout.Vertical
-	m.title = NewLabel(win, title).UniformInset(1).SetInsetLeft(5)
+	m.title = NewLabel(win, title).UniformInset(1).SetInsetLeft(6)
 	m.time = NewLabel(win, "").UniformInset(1).SetInsetRight(5)
-	m.msg = NewLabel(win, msg).UniformInset(1).SetInsetLeft(5)
+	m.msg = NewLabel(win, msg).UniformInset(1).SetInsetLeft(5).SetInsetTop(8)
 	m.split = NewSplit()
 	m.split.Left = 5
 	m.time.TextSize -= 2
 	m.msg.TextSize -= 2
-	m.SetHeight(55)
+	m.SetHeight(60)
 	m.id = int(atomic.AddUint32(&cardID, 1))
 	m.timeStamp = ts
 	m.tsFormat = TimeStampFormat
@@ -109,7 +109,7 @@ func (m *Card) SetImage(img image.Image) *Card {
 		m.img.Src = paint.NewImageOp(img)
 		return m
 	}
-	m.img = NewImage(m.win, img).Resize(50, 50).SetInsetLeft(5)
+	m.img = NewImage(m.win, img).Resize(50, 50).UniformInset(5).SetInsetTop(10).SetInsetBottom(0)
 	m.img.Fit = widget.Fill
 	return m
 }
