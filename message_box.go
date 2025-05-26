@@ -76,7 +76,7 @@ type MessageBox struct {
 	rememberBool *widget.Bool //是否记住选择
 	options      []MBOption
 	result       string
-	needRefresh  bool
+	refreshCount  byte
 	onSubmit     func(selectedOption string, remember bool) //确定后的回调函数
 	content      Contenter
 
@@ -116,7 +116,7 @@ func (m *MessageBox) SetOptions(options ...MBOption) {
 
 func (m *MessageBox) Show() {
 	m.Visible = true
-	m.needRefresh = true
+	m.refreshCount = 0
 }
 
 func (m *MessageBox) Hide() {
@@ -264,10 +264,10 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 									d = b.Layout(gtx)
 								}
 								m.MaxHeight = d.Size.Y + dp
-								if m.needRefresh { //动态刷新
+								if m.refreshCount < 3 { //动态刷新
 									// m.win.Log(m.MaxHeight)
-									m.needRefresh = false
-									gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Second / 500)})
+									m.refreshCount ++
+									gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Millisecond* 300)})
 								}
 								return d
 							})

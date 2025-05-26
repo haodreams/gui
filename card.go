@@ -44,9 +44,9 @@ func NewCard(win *Window, ts int64, title, msg string) *Card {
 	m.Init(win, m)
 	m.top.Spacing = layout.SpaceBetween
 	m.right.Axis = layout.Vertical
-	m.title = NewLabel(win, title).UniformInset(1).SetInsetLeft(6)
+	m.title = NewLabel(win, title).UniformInset(1).SetInsetLeft(6).SetInsetTop(2)
 	m.time = NewLabel(win, "").UniformInset(1).SetInsetRight(5)
-	m.msg = NewLabel(win, msg).UniformInset(1).SetInsetLeft(5).SetInsetTop(8)
+	m.msg = NewLabel(win, msg).SetInsetRight(1).SetInsetLeft(5).SetInsetTop(4).SetInsetBottom(2)
 	m.split = NewSplit()
 	m.split.Left = 5
 	m.time.TextSize -= 2
@@ -176,7 +176,6 @@ func (m *Card) Layout(gtx C) D {
 							return m.top.Layout(gtx, layout.Rigid(m.title.Layout), layout.Rigid(m.time.Layout)) //左右排列 标题和时间
 						}),
 						layout.Flexed(1, m.msg.Layout), //消息
-						layout.Rigid(m.split.Layout),   //底部分割线
 						layout.Rigid(m.split.Layout),   //底部分割线
 					)
 				}),
