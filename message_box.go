@@ -264,10 +264,10 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 									d = b.Layout(gtx)
 								}
 								m.MaxHeight = d.Size.Y + dp
-								if m.needRefresh {
+								if m.needRefresh { //动态刷新
 									// m.win.Log(m.MaxHeight)
 									m.needRefresh = false
-									gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Second / 100)})
+									gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Second / 500)})
 								}
 								return d
 							})
