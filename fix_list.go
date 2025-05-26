@@ -24,6 +24,11 @@ func NewFixList(win *Window, size int) *FixList {
 	return m
 }
 
+func (m *FixList) SetAxis(axis layout.Axis) *FixList {
+	m.Axis = axis
+	return m
+}
+
 func (m *FixList) SetDesc(desc bool) *FixList {
 	m.desc = desc
 	return m
@@ -157,7 +162,6 @@ func (m *FixArray[G]) Pop() (e *G, err error) {
 	return
 }
 
-
 // 先进后出
 func (m *FixArray[G]) Stack(begin, limit int) []*G {
 	count := m.Size()
@@ -179,11 +183,11 @@ func (m *FixArray[G]) Stack(begin, limit int) []*G {
 	rows := make([]*G, limit)
 	ii := 0
 
-		for i := begin; i < end; i++ {
-			pos := ((m.cap + m.pos) - uint(i) - 1) % m.cap
-			p := m.array[pos]
-			rows[ii] = p
-			ii++
-		}
+	for i := begin; i < end; i++ {
+		pos := ((m.cap + m.pos) - uint(i) - 1) % m.cap
+		p := m.array[pos]
+		rows[ii] = p
+		ii++
+	}
 	return rows[:ii]
 }

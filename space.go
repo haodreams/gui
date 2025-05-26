@@ -30,8 +30,16 @@ func (m *space) Layout(gtx layout.Context) D {
 	return m.Spacer.Layout(gtx) //D{} // 占位符，用于填充剩余空间
 }
 
-func Space() *space {
-	return new(space)
+func Space(dp ...int) *space {
+	width := 0
+	height := 0
+	switch len(dp) {
+	case 1:
+		height = dp[0]
+	case 2:
+		width, height = dp[0], dp[1]
+	}
+	return &space{Spacer: layout.Spacer{Width: unit.Dp(width), Height: unit.Dp(height)}}
 }
 
 // func NewSpace() layout.FlexChild {
