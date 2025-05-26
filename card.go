@@ -114,7 +114,12 @@ func (m *Card) SetImage(img image.Image) *Card {
 	return m
 }
 
+func (m *Card)GetImage()*Image{
+	return m.img
+}
+
 func (m *Card) SetTitle(title string) *Card {
+	m.title.Text = title
 	return m
 }
 

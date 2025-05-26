@@ -36,9 +36,12 @@ func (m *List) AddItem(item Contenter) *List {
 	return m
 }
 
-func (m *List) Layout(gtx layout.Context) layout.Dimensions {
+func (m *List) Layout(gtx C) D {
 	m.CheckDimensions(&gtx)
-	return m.List.Layout(gtx, len(m.items), func(gtx layout.Context, index int) layout.Dimensions {
+	return m.List.Layout(gtx, len(m.items), func(gtx C, index int) D {
+		if m.items[index] == nil{
+			return D{}
+		}
 		return m.items[index].Layout(gtx)
 	})
 }

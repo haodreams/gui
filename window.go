@@ -18,6 +18,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"gioui.org/x/explorer"
 )
@@ -35,6 +36,7 @@ type Window struct {
 	prompt    *MessageBox //消息对话框
 	*explorer.Explorer
 
+	Metric unit.Metric //
 	width     int               // 窗口宽度
 	height    int               // 窗口高度
 	statusBar                   //状态栏
@@ -60,6 +62,7 @@ func NewWindow(opts ...Option) *Window {
 		Inset(8)(&m.Config)
 	}
 
+
 	// Load Go Fonts to theme
 	if m.theme.Shaper == nil {
 		m.theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection())) // 加载Go Fonts字库
@@ -76,6 +79,14 @@ func NewWindow(opts ...Option) *Window {
 		m.dataDir = "./"
 	}
 	return m
+}
+
+func (m *Window)GetWidth()int{
+	return m.width
+}
+
+func (m *Window)GetHeight() int{
+	return m.height
 }
 
 // SetContent sets the widget that will be displayed in the window.
@@ -242,6 +253,7 @@ func (m *Window) RestoreDialogWidth() {
 func (m *Window) layout(gtx C) D {
 	m.width = gtx.Constraints.Max.X
 	m.height = gtx.Constraints.Max.Y
+	m.Metric = gtx.Metric
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
