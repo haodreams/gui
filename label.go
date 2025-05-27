@@ -13,11 +13,13 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
 type Label struct {
 	Widget[Label]
+	th * material.Theme
 	material.LabelStyle
 }
 
@@ -30,9 +32,20 @@ func NewLabel(win *Window, text string) *Label {
 	return m
 }
 
-func (m *Label)SetText(text string) *Label {
+func (m *Label) EnableSelect(b bool) *Label {
+	if b {
+		if m.State == nil {
+			m.State = new(widget.Selectable)
+		}
+		return m
+	}
+	m.State = nil
+	return m
+}
+
+func (m *Label) SetText(text string) *Label {
 	m.LabelStyle.Text = text
-	return m	
+	return m
 }
 
 func (m *Label) SetAlignment(alig text.Alignment) *Label {
@@ -45,16 +58,21 @@ func (m *Label) SetColor(color color.NRGBA) *Label {
 	return m
 }
 
-func (m *Label) SetStyle(style material.LabelStyle) *Label {
-	text :=m.LabelStyle.Text
-	m.LabelStyle = style
-	m.LabelStyle.Text = text
+func (m *Label)SetCaret(start, end int)  *Label{
+	if m.State != nil{
+		m.State.SetCaret(start,end)
+	}
 	return m
 }
 
-func (m *Label) SetH6() *Label {
-	text :=m.LabelStyle.Text
-	m.LabelStyle = material.H6(m.Theme(), text)
+func (m *Label) SetStyle(f func (th * material.Theme, txt string) material.LabelStyle) *Label {
+	if m.th == nil{
+		m.th = m.Theme()
+	}
+	style:= f(m.th,m.Text)
+	style.Color = m.Color
+	style.State = m.State
+	m.LabelStyle = style
 	return m
 }
 
