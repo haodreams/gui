@@ -67,15 +67,19 @@ func (m *Form) Layout(gtx layout.Context) D {
 
 	offset := layout.Inset{}
 
-	maxWidth := gtx.Dp(unit.Dp(m.MaxWidth))
+	maxWidth := unit.Dp(m.MaxWidth)
+	width:= gtx.Metric.PxToDp(m.win.width)
 	if maxWidth > 0 {
-		offset.Left = (unit.Dp(gtx.Constraints.Max.X-maxWidth) / 2) / unit.Dp(gtx.Metric.PxPerDp)
+		offset.Left = (unit.Dp(width-maxWidth) / 2)
 		if offset.Left < 0 {
 			offset.Left = 0
 		} else {
-			x := int(gtx.Dp(offset.Left)) + maxWidth
-			if gtx.Constraints.Max.X > x {
-				gtx.Constraints.Max.X = x
+			x := offset.Left + maxWidth
+			if x > width{
+				x = width
+			}
+			if gtx.Constraints.Max.X > int(x) {
+				gtx.Constraints.Max.X = int(x)
 			}
 		}
 	}
@@ -88,6 +92,9 @@ func (m *Form) Layout(gtx layout.Context) D {
 			offset.Top = 0
 		} else {
 			y := int(gtx.Dp(offset.Top)) + maxHeight
+			if y > m.win.height{
+				y = m.win.height
+			}
 			y -= int(gtx.Dp(m.bottomOffset))
 			gtx.Constraints.Max.Y = y 
 			// if gtx.Constraints.Max.Y > y {

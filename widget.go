@@ -95,6 +95,12 @@ func (m *Widget[T]) SetInsetRight(v unit.Dp) *T {
 }
 
 func (m *Widget[T]) CheckDimensions(gtx *layout.Context) {
+	if m.MaxWidth > m.win.width {
+		m.MaxWidth = m.win.width
+	}
+	if m.MaxHeight > m.win.height{
+		m.MaxHeight = m.win.height
+	}
 	if m.MaxWidth > 0 {
 		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(m.MaxWidth))
 	}
