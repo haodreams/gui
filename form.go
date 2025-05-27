@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/x/component"
 )
@@ -14,8 +15,8 @@ type Form struct {
 	color color.NRGBA
 	show  bool
 	Widget[Form]
-	layout.Direction
 	content Contenter
+	bottomOffset unit.Dp
 }
 
 func (m *Form) Hide() *Form {
@@ -29,13 +30,17 @@ func (m *Form) Show() *Form {
 
 func NewForm(win *Window) *Form {
 	m := &Form{}
+	return m.Setup(win)
+}
+
+func (m *Form)Setup(win *Window)*Form{
 	m.Init(win, m)
 	m.color = win.theme.Bg
 	return m
 }
 
-func (m *Form) SetDirection(direction layout.Direction) *Form {
-	m.Direction = direction
+func (m *Form)SetBottomOffset(offset unit.Dp) *Form{
+	m.bottomOffset = offset
 	return m
 }
 
@@ -60,11 +65,43 @@ func (m *Form) Layout(gtx layout.Context) D {
 	}
 	m.CheckDimensions(&gtx)
 
-	m.Clickable.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min = gtx.Constraints.Max
-		component.Rect{Color: m.color, Size: gtx.Constraints.Max}.Layout(gtx)
-		return D{Size: gtx.Constraints.Max}
+	offset := layout.Inset{}
+
+	maxWidth := gtx.Dp(unit.Dp(m.MaxWidth))
+	if maxWidth > 0 {
+		offset.Left = (unit.Dp(gtx.Constraints.Max.X-maxWidth) / 2) / unit.Dp(gtx.Metric.PxPerDp)
+		if offset.Left < 0 {
+			offset.Left = 0
+		} else {
+			x := int(gtx.Dp(offset.Left)) + maxWidth
+			if gtx.Constraints.Max.X > x {
+				gtx.Constraints.Max.X = x
+			}
+		}
+	}
+
+	//高度不需要进行转换， 高度是已经计算后的数据
+	maxHeight := m.MaxHeight
+	if maxHeight > 0 {
+		offset.Top = unit.Dp(m.win.height-maxHeight) / unit.Dp(gtx.Metric.PxPerDp)
+		if offset.Top < 0 {
+			offset.Top = 0
+		} else {
+			y := int(gtx.Dp(offset.Top)) + maxHeight
+			y -= int(gtx.Dp(m.bottomOffset))
+			gtx.Constraints.Max.Y = y 
+			// if gtx.Constraints.Max.Y > y {
+			// }
+		}
+	}
+
+	offset.Layout(gtx, func(gtx C) D {
+		return m.Clickable.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min = gtx.Constraints.Max
+			component.Rect{Color: m.color, Size: gtx.Constraints.Max}.Layout(gtx)
+			return D{Size: gtx.Constraints.Max}
+		})
 	})
 
-	return m.content.Layout(gtx)
+	return offset.Layout(gtx, m.content.Layout)
 }

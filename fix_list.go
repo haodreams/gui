@@ -12,7 +12,7 @@ import (
 type FixList struct {
 	Widget[FixList]
 	widget.List
-	FixArray[Contenter]
+	FixSlice[Contenter]
 	desc bool //是否倒序显示
 }
 
@@ -40,13 +40,13 @@ func (m *FixList) AddItem(item Contenter) *FixList {
 }
 
 func (m *FixList) SetSize(size int) *FixList {
-	m.FixArray.SetSize(size)
+	m.FixSlice.SetSize(size)
 	return m
 }
 
 func (m *FixList) Layout(gtx layout.Context) layout.Dimensions {
 	m.CheckDimensions(&gtx)
-	return m.List.Layout(gtx, m.Size(), func(gtx layout.Context, index int) layout.Dimensions {
+	return m.List.Layout(gtx, m.Len(), func(gtx layout.Context, index int) layout.Dimensions {
 		if m.desc {
 			item := m.GetDesc(index)
 			if item == nil {
@@ -62,35 +62,35 @@ func (m *FixList) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-// 固定大小的列表
-type FixArray[G any] struct {
+// 固定大小的队列
+type FixSlice[G any] struct {
 	array []*G
-	pos   uint //当前队列位置
-	cap   uint //最大容量
-	size  uint //当前数据个数
+	head  uint32 // 队首位置
+	tail  uint32 // 队尾的下一个位置
+	cap   uint32 // 最大容量
+	size  uint32 // 当前数据个数
 }
 
-/**
- * @description: 新建一个固定大小的列表
- * @return {*}
- */
-func NewFixArray[G any](size int) *FixArray[G] {
-	m := new(FixArray[G])
+// 创建新的固定大小队列
+func NewFixSlice[G any](size int) *FixSlice[G] {
+	m := &FixSlice[G]{}
 	m.SetSize(size)
 	return m
 }
 
-func (m *FixArray[G]) Reset() {
-	m.pos = 0
+// 重置队列
+func (m *FixSlice[G]) Reset() {
+	m.head = 0
+	m.tail = 0
 	m.size = 0
+	// 帮助GC回收内存
+	for i := range m.array {
+		m.array[i] = nil
+	}
 }
 
-/**
- * @description: 初始化队列的最大值
- * @param {int} maxLines
- * @return {*}
- */
-func (m *FixArray[G]) SetSize(maxLines int) {
+// 设置队列大小
+func (m *FixSlice[G]) SetSize(maxLines int) {
 	if maxLines < 2 {
 		maxLines = 2
 	}
@@ -101,70 +101,110 @@ func (m *FixArray[G]) SetSize(maxLines int) {
 		return
 	}
 	m.array = make([]*G, maxLines)
-	m.cap = uint(maxLines)
+	m.cap = uint32(maxLines)
 	m.Reset()
 }
 
-/**
- * @description: 获取队列数据大小
- * @param {*}
- * @return {*}
- */
-func (m *FixArray[G]) Size() int {
+// 获取队列大小
+func (m *FixSlice[G]) Len() int {
 	return int(m.size)
 }
 
-/**
- * @description: 压入数据
- * @param {*EventLog} e
- * @return {*}
- */
-func (m *FixArray[G]) Push(e *G) {
-	m.array[m.pos] = e
-	m.pos++
-	m.size++
-	m.pos = m.pos % m.cap
-	if m.size > m.cap {
-		m.size = m.cap
+// 检查队列是否为空
+func (m *FixSlice[G]) IsEmpty() bool {
+	return m.size == 0
+}
+
+// 检查队列是否已满
+func (m *FixSlice[G]) IsFull() bool {
+	return m.size == m.cap
+}
+
+// 入队操作
+func (m *FixSlice[G]) Push(e *G) {
+	if m.IsFull() {
+		// 队列已满，覆盖队首元素
+		m.array[m.head] = e
+		m.head = (m.head + 1) % m.cap
+	} else {
+		m.array[m.tail] = e
+		m.tail = (m.tail + 1) % m.cap
+		m.size++
 	}
 }
 
-func (m *FixArray[G]) Get(index int) *G {
+// 获取指定位置的元素
+func (m *FixSlice[G]) Get(index int) *G {
 	if index < 0 || index >= int(m.size) {
 		return nil
 	}
-	pos := ((m.cap + m.pos - m.size) + uint(index)) % m.cap
+	pos := (m.head + uint32(index)) % m.cap
 	return m.array[pos]
 }
 
-// 倒叙获取数据
-func (m *FixArray[G]) GetDesc(index int) *G {
+// 倒序获取指定位置的元素
+func (m *FixSlice[G]) GetDesc(index int) *G {
 	if index < 0 || index >= int(m.size) {
 		return nil
 	}
-	pos := ((m.cap + m.pos) - uint(index) - 1) % m.cap
+	pos := (m.tail - uint32(index) - 1 + m.cap) % m.cap
 	return m.array[pos]
 }
 
-/**
- * @description: 压入数据
- * @param {*EventLog} e
- * @return {*}
- */
-func (m *FixArray[G]) Pop() (e *G, err error) {
-	if m.size == 0 {
+// 出队操作
+func (m *FixSlice[G]) Pop() (e *G, err error) {
+	if m.IsEmpty() {
 		return nil, io.EOF
 	}
-
-	pos := (m.cap + m.pos - m.size) % m.cap
-	e = m.array[pos]
+	e = m.array[m.head]
+	m.array[m.head] = nil // 帮助GC回收内存
+	m.head = (m.head + 1) % m.cap
 	m.size--
 	return
 }
 
-// 先进后出
-func (m *FixArray[G]) Stack(begin, limit int) []*G {
-	count := m.Size()
+// 辅助函数：返回两数中的较小值
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// 辅助函数：生成索引序列
+func generateIndices(start, end int, asc bool) []int {
+	if asc {
+		indices := make([]int, end-start)
+		for i := range indices {
+			indices[i] = start + i
+		}
+		return indices
+	} else {
+		indices := make([]int, end-start)
+		for i := range indices {
+			indices[i] = end - 1 - i
+		}
+		return indices
+	}
+}
+
+// 按队列顺序获取元素（先进先出）
+func (m *FixSlice[G]) Queue(begin, limit int, orderAsc ...bool) []*G {
+	return m.getElements(begin, limit, orderAsc, func(idx int) uint32 {
+		return (m.head + uint32(idx)) % m.cap
+	})
+}
+
+// 按栈顺序获取元素（后进先出）
+func (m *FixSlice[G]) Stack(begin, limit int, orderAsc ...bool) []*G {
+	return m.getElements(begin, limit, orderAsc, func(idx int) uint32 {
+		return (m.tail - uint32(idx) - 1 + m.cap) % m.cap
+	})
+}
+
+// 公共实现函数
+func (m *FixSlice[G]) getElements(begin, limit int, orderAsc []bool, posFunc func(int) uint32) []*G {
+	count := m.Len()
 	if count == 0 {
 		return nil
 	}
@@ -178,16 +218,19 @@ func (m *FixArray[G]) Stack(begin, limit int) []*G {
 	if end <= begin {
 		return nil
 	}
-	limit = end - begin
 
-	rows := make([]*G, limit)
-	ii := 0
-
-	for i := begin; i < end; i++ {
-		pos := ((m.cap + m.pos) - uint(i) - 1) % m.cap
-		p := m.array[pos]
-		rows[ii] = p
-		ii++
+	asc := true
+	if len(orderAsc) > 0 {
+		asc = orderAsc[0]
 	}
-	return rows[:ii]
+
+	indices := generateIndices(begin, end, asc)
+	rows := make([]*G, len(indices))
+
+	for i, idx := range indices {
+		pos := posFunc(idx)
+		rows[i] = m.array[pos]
+	}
+
+	return rows
 }

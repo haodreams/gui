@@ -24,15 +24,6 @@ import (
 	"golang.org/x/exp/shiny/iconvg"
 )
 
-// var img Image
-// imgOp := paint.NewImageOp(img2)
-type Image struct {
-	Widget[Image]
-	widget.Image
-
-	cb func(gtx layout.Context, ie *Image)
-}
-
 // strconv.ParseIntColor 解析十六进制颜色代码为 RGBA 值
 func ParseIntColor(hex string) (r, g, b, a byte, err error) {
 	// 移除前缀 #
@@ -127,15 +118,41 @@ func LoadPng(data []byte) (img image.Image, err error) {
 	return png.Decode(buf)
 }
 
+// var img Image
+// imgOp := paint.NewImageOp(img2)
+type Image struct {
+	Widget[Image]
+	widget.Image
+	img image.Image 
+
+	cb func(gtx layout.Context, ie *Image)
+}
+
 func NewImage(win *Window, img image.Image) (m *Image) {
 	m = new(Image)
 	m.win = win
 	m.Init(win, m)
+	if img != nil {
+		m.img = img
+		m.Src = paint.NewImageOp(img)
+	}
+	return m
+}
+
+func (m *Image)GetImage()image.Image{
+	return m.img
+}
+
+func (m *Image) SetImage(img image.Image) *Image {
+	m.img = img
 	m.Src = paint.NewImageOp(img)
 	return m
 }
 
 func (m *Image) Layout(gtx layout.Context) D {
+	if m.img == nil{
+		return D{}
+	}
 	if m.cb != nil {
 		m.cb(gtx, m)
 	}

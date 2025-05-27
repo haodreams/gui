@@ -44,6 +44,7 @@ type Window struct {
 	statusBar                   //状态栏
 	dataDir   string            // 数据目录
 	Shield                      // 屏蔽层
+	Form                        //表单
 	onClose   func()            // 关闭窗口事件
 	onEvent   func(event.Event) // 出现窗口事件
 }
@@ -76,6 +77,7 @@ func NewWindow(opts ...Option) *Window {
 	m.statusBar.Init(m).show = m.Config.showStatusBar // 初始化状态栏, 显示状态栏
 	m.Explorer = explorer.NewExplorer(m.win)          // 初始化文件浏览器
 	m.Shield.SetColor(m.theme.Bg)                     // 设置屏蔽层颜色
+	m.Form.Setup(m)                       //设置对话框的背景色
 
 	m.dataDir, err = app.DataDir() //
 	if err != nil {
@@ -281,11 +283,14 @@ func (m *Window) layout(gtx C) D {
 				}),
 			)
 		}),
+		layout.Expanded(func(gtx C) D { //绘制表单
+			return m.Form.Layout(gtx)
+		}),
 		layout.Expanded(func(gtx C) D { //绘制屏蔽层
 			return m.Shield.Layout(gtx)
 		}),
 		layout.Expanded(func(gtx C) D { //显示对话框的级别应该最高
-			return m.prompt.Layout(gtx, m.width, m.height)
+			return m.prompt.Layout(gtx)
 		}),
 	)
 }

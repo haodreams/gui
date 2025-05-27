@@ -35,7 +35,8 @@ type Card struct {
 	timeStamp int64              //时间戳
 	tsFormat  func(int64) string //时间戳格式化函数(默认是时间戳转时间字符串)
 	onClick   func(card *Card)
-	id        int //删除的识别字段
+	id        int  //删除的识别字段
+	hide      bool //是否不显示
 	widget.Clickable
 }
 
@@ -94,6 +95,16 @@ func (m *Card) ID() int {
 	return m.id
 }
 
+func (m *Card) Show() *Card {
+	m.hide = false
+	return m
+}
+
+func (m *Card) Hide() *Card {
+	m.hide = true
+	return m
+}
+
 func (m *Card) SetOnClick(onClick func(card *Card)) *Card {
 	m.onClick = onClick
 	return m
@@ -114,7 +125,7 @@ func (m *Card) SetImage(img image.Image) *Card {
 	return m
 }
 
-func (m *Card)GetImage()*Image{
+func (m *Card) GetImage() *Image {
 	return m.img
 }
 
@@ -159,6 +170,9 @@ func (m *Card) Msg() string {
 }
 
 func (m *Card) Layout(gtx C) D {
+	if m.hide{
+		return D{}
+	}
 	if m.onClick != nil {
 		if m.Clicked(gtx) {
 			//m.win.Log("Card Clicked")

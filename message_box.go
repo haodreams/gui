@@ -167,7 +167,7 @@ func (m *MessageBox) Result() (string, bool) {
 
 	return m.result, false
 }
-func (m *MessageBox) Layout(gtx layout.Context, width, height int) D {
+func (m *MessageBox) Layout(gtx layout.Context) D {
 	if !m.Visible {
 		return D{}
 	}
@@ -205,9 +205,9 @@ func (m *MessageBox) Layout(gtx layout.Context, width, height int) D {
 		}
 	} else {
 		h := gtx.Dp(unit.Dp(15))
-		if height-gtx.Constraints.Max.Y < h {
+		if m.win.height-gtx.Constraints.Max.Y < h {
 			offset.Top = 0
-			gtx.Constraints.Max.Y = height - h
+			gtx.Constraints.Max.Y = m.win.height - h
 		}
 	}
 	d2 := offset.Layout(gtx, func(gtx C) D {
