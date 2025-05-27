@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 20:57:36
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2024-07-28 18:13:14
+ * @LastEditTime: 2025-05-27 12:17:32
  * @FilePath: \goui\ui\edit.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -21,9 +21,10 @@ type Edit struct {
 	Widget[Edit]
 	hint string
 	widget.Editor
-	blur    func(string) //失去光标的回调函数
-	focused bool         //当前是否有焦点，判断失去焦点的条件
-
+	blur     func(string) //失去光标的回调函数
+	focused  bool         //当前是否有焦点，判断失去焦点的条件
+	textSize unit.Sp //字体大小
+	color *color.NRGBA //字体颜色
 	onSubmit func(string)
 }
 
@@ -44,6 +45,16 @@ func (m *Edit) SetBlur(f func(string)) *Edit {
 func (m *Edit) SetMask(mask rune) *Edit {
 	m.Mask = mask
 	return m
+}
+
+func (m *Edit)SetColor(c *color.NRGBA) *Edit {
+	m.color = c
+	return m
+}
+
+func (m *Edit)SetTextSize(size unit.Sp) *Edit {
+	m.textSize += size
+	return m	
 }
 
 func (m *Edit) SetOnSubmit(f func(string)) *Edit {
@@ -99,6 +110,14 @@ func (m *Edit) Layout(gtx layout.Context) layout.Dimensions {
 	}
 	border := widget.Border{Color: borderColor, CornerRadius: unit.Dp(2), Width: unit.Dp(borderWidth)}
 	return border.Layout(gtx, func(gtx C) D {
-		return m.Inset.Layout(gtx, material.Editor(m.Theme(), &m.Editor, m.hint).Layout)
+		//return m.Inset.Layout(gtx, material.Editor(m.Theme(), &m.Editor, m.hint).Layout)
+		es := material.Editor(m.Theme(), &m.Editor, m.hint)
+		if m.textSize > 0 {
+			es.TextSize = m.textSize
+		}
+		if m.color != nil {
+			es.Color = *m.color	
+		}
+		return m.Inset.Layout(gtx, es.Layout)
 	})
 }
