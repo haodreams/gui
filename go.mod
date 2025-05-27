@@ -3,6 +3,7 @@ module gitee.com/haodreams/gui
 go 1.23.0
 
 require (
+	eliasnaur.com/font v0.0.0-20230308162249-dd43949cb42d
 	gioui.org v0.8.0
 	gioui.org/x v0.8.1
 	golang.org/x/exp/shiny v0.0.0-20250506013437-ce4c2cf36ca6

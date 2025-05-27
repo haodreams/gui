@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 23:59:39
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-24 13:45:59
+ * @LastEditTime: 2025-05-27 13:43:21
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\windows.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -12,8 +12,10 @@ import (
 	"os"
 	"strings"
 
+	colEmoji "eliasnaur.com/font/noto/emoji/color"
 	"gioui.org/app"
 	"gioui.org/font/gofont"
+	"gioui.org/font/opentype"
 	"gioui.org/io/event"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -36,7 +38,7 @@ type Window struct {
 	prompt    *MessageBox //消息对话框
 	*explorer.Explorer
 
-	Metric unit.Metric //
+	Metric    unit.Metric       //
 	width     int               // 窗口宽度
 	height    int               // 窗口高度
 	statusBar                   //状态栏
@@ -52,7 +54,11 @@ func NewWindow(opts ...Option) *Window {
 	m.win = new(app.Window)
 	// 初始化边距
 	m.theme = material.NewTheme() // 创建 Material Theme
-
+	collection := gofont.Collection()
+	faces, err := opentype.ParseCollection(colEmoji.TTF)
+	if err == nil {
+		m.theme.Shaper = text.NewShaper(text.WithCollection(append(collection, faces...)))
+	}
 	for _, opt := range opts {
 		opt(&m.Config)
 	}
@@ -61,7 +67,6 @@ func NewWindow(opts ...Option) *Window {
 	if !m.insetInited {
 		Inset(8)(&m.Config)
 	}
-
 
 	// Load Go Fonts to theme
 	if m.theme.Shaper == nil {
@@ -72,7 +77,6 @@ func NewWindow(opts ...Option) *Window {
 	m.Explorer = explorer.NewExplorer(m.win)          // 初始化文件浏览器
 	m.Shield.SetColor(m.theme.Bg)                     // 设置屏蔽层颜色
 
-	var err error
 	m.dataDir, err = app.DataDir() //
 	if err != nil {
 		m.Log("Init data dir error,", err)
@@ -81,11 +85,11 @@ func NewWindow(opts ...Option) *Window {
 	return m
 }
 
-func (m *Window)GetWidth()int{
+func (m *Window) GetWidth() int {
 	return m.width
 }
 
-func (m *Window)GetHeight() int{
+func (m *Window) GetHeight() int {
 	return m.height
 }
 
@@ -139,16 +143,15 @@ func (m *Window) SetTitle(title string) {
 	m.win.Option(app.Title(title))
 }
 
-func (m *Window)ShowShield(){
+func (m *Window) ShowShield() {
 	m.Shield.Show()
 	m.Invalidate()
 }
 
-func (m *Window)HideShield(){
+func (m *Window) HideShield() {
 	m.Shield.Hide()
 	m.Invalidate()
 }
-
 
 func (m *Window) Info(title string, contant string) {
 	m.MessageBox(title, contant, ModalInfo)
@@ -278,10 +281,10 @@ func (m *Window) layout(gtx C) D {
 				}),
 			)
 		}),
-		layout.Expanded(func(gtx C) D {//绘制屏蔽层
+		layout.Expanded(func(gtx C) D { //绘制屏蔽层
 			return m.Shield.Layout(gtx)
-		}),		
-		layout.Expanded(func(gtx C) D {//显示对话框的级别应该最高
+		}),
+		layout.Expanded(func(gtx C) D { //显示对话框的级别应该最高
 			return m.prompt.Layout(gtx, m.width, m.height)
 		}),
 	)
