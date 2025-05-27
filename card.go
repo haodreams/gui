@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/widget"
 )
 
@@ -117,7 +116,7 @@ func (m *Card) SetLevel(level string) *Card {
 
 func (m *Card) SetImage(img image.Image) *Card {
 	if m.img != nil {
-		m.img.Src = paint.NewImageOp(img)
+		m.img.SetImage(img)
 		return m
 	}
 	m.img = NewImage(m.win, img).Resize(50, 50).UniformInset(5).SetInsetTop(10).SetInsetBottom(0)
@@ -170,7 +169,7 @@ func (m *Card) Msg() string {
 }
 
 func (m *Card) Layout(gtx C) D {
-	if m.hide{
+	if m.hide {
 		return D{}
 	}
 	if m.onClick != nil {

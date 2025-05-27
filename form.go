@@ -81,7 +81,7 @@ func (m *Form) Layout(gtx layout.Context) D {
 	}
 
 	//高度不需要进行转换， 高度是已经计算后的数据
-	maxHeight := m.MaxHeight
+	maxHeight := gtx.Dp(unit.Dp(m.MaxHeight))
 	if maxHeight > 0 {
 		offset.Top = unit.Dp(m.win.height-maxHeight) / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Top < 0 {
