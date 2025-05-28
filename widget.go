@@ -37,10 +37,8 @@ type (
 type Widget[T any] struct {
 	win       *Window
 	t         *T
-	MaxWidth  int
-	MaxHeight int
-	MinWidth  int
-	MinHeight int
+	MaxWidth  unit.Dp
+	MaxHeight unit.Dp
 	Inset     layout.Inset
 
 	th *material.Theme //私有的主题，优先使用私有主题， 没有找到则找默认主题
@@ -95,24 +93,21 @@ func (m *Widget[T]) SetInsetRight(v unit.Dp) *T {
 }
 
 func (m *Widget[T]) CheckDimensions(gtx *layout.Context) {
-	if m.MaxWidth > m.win.width {
-		m.MaxWidth = m.win.width
-	}
-	if m.MaxHeight > m.win.height{
-		m.MaxHeight = m.win.height
-	}
 	if m.MaxWidth > 0 {
+		width := gtx.Metric.PxToDp(m.win.width)
+		if m.MaxWidth > width {
+			m.MaxWidth = width
+		}
 		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(m.MaxWidth))
 	}
 	if m.MaxHeight > 0 {
+		height := gtx.Metric.PxToDp(m.win.height)
+		if m.MaxHeight > height {
+			m.MaxHeight = height
+		}
 		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(m.MaxHeight))
 	}
-	if m.MinWidth > 0 {
-		gtx.Constraints.Min.X = gtx.Dp(unit.Dp(m.MinWidth))
-	}
-	if m.MinHeight > 0 {
-		gtx.Constraints.Min.Y = gtx.Dp(unit.Dp(m.MinHeight))
-	}
+
 }
 func (m *Widget[T]) Resize(width, height int) *T {
 	m.SetWidth(width)
@@ -121,33 +116,22 @@ func (m *Widget[T]) Resize(width, height int) *T {
 }
 
 func (m *Widget[T]) SetWidth(width int) *T {
-	m.MaxWidth = width
-	m.MinWidth = width
+	m.MaxWidth = unit.Dp(width)
 	return m.t
 }
 
 func (m *Widget[T]) SetHeight(height int) *T {
-	m.MaxHeight = height
-	m.MinHeight = height
+	m.MaxHeight = unit.Dp(height)
 	return m.t
 }
 
 func (m *Widget[T]) SetMaxWidth(width int) *T {
-	m.MaxWidth = width
+	m.MaxWidth = unit.Dp(width)
 	return m.t
 }
 
 func (m *Widget[T]) SetMaxHeight(height int) *T {
-	m.MaxHeight = height
-	return m.t
-}
-func (m *Widget[T]) SetMinWidth(width int) *T {
-	m.MinWidth = width
-	return m.t
-}
-
-func (m *Widget[T]) SetMinHeight(height int) *T {
-	m.MinHeight = height
+	m.MaxHeight = unit.Dp(height)
 	return m.t
 }
 

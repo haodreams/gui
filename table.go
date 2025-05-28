@@ -88,15 +88,6 @@ func NewTable(win *Window, table Tabler) *Table {
 	return m
 }
 
-func (m *Table) SetWidth(width int) *Table {
-	m.MaxWidth = width
-	return m
-}
-func (m *Table) SetHeight(height int) *Table {
-	m.MaxHeight = height
-	return m
-}
-
 // 创建自定义单元格回调函数
 func (m *Table) SetCreateCellCallback(f func(gtx layout.Context, row, col int) D) *Table {
 	m.creatCellCallback = f

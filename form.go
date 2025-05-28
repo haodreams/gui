@@ -94,8 +94,8 @@ func (m *Form) Layout(gtx layout.Context) D {
 			if y > m.win.height {
 				y = m.win.height
 			}
-			gtx.Constraints.Max.Y = y
 			y -= int(gtx.Dp(m.bottomOffset))
+			gtx.Constraints.Max.Y = y
 		}
 		offset.Top = gtx.Metric.PxToDp(int(offset.Top))
 	}

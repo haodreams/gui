@@ -72,7 +72,7 @@ type MessageBox struct {
 	Visible bool
 
 	Widget[MessageBox]
-	lastWidth    int
+	lastWidth    unit.Dp
 	rememberBool *widget.Bool //是否记住选择
 	options      []MBOption
 	result       string
@@ -192,7 +192,7 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 	}
 
 	//高度不需要进行转换， 高度是已经计算后的数据
-	maxHeight := m.MaxHeight
+	maxHeight := int(m.MaxHeight)
 	if maxHeight > 0 {
 		offset.Top = unit.Dp(gtx.Constraints.Max.Y-maxHeight) / 2 / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Top < 0 {
@@ -263,7 +263,7 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 									b.Color = dlgTextColor[m.Type]
 									d = b.Layout(gtx)
 								}
-								m.MaxHeight = d.Size.Y + dp
+								m.MaxHeight = unit.Dp( d.Size.Y + dp)
 								if m.refreshCount < 3 { //动态刷新
 									// m.win.Log(m.MaxHeight)
 									m.refreshCount ++
