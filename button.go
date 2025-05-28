@@ -96,7 +96,8 @@ func (m *Button) Layout(gtx layout.Context) layout.Dimensions {
 			btn.Color = *m.color
 		}
 		btn.Inset = m.Inset
-		return btn.Layout(gtx)
+		d:= btn.Layout(gtx)
+		return d
 	}
 
 	if m.text == "" {

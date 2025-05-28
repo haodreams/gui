@@ -115,8 +115,14 @@ var DownloadIcon *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.FileFileDownload)
 	return icon
 }()
+
 var RefreshIcon *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.NavigationRefresh)
+	return icon
+}()
+
+var LoopIcon *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.AVLoop)
 	return icon
 }()
 
