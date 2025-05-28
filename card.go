@@ -84,6 +84,12 @@ func TimeStampFormat(t int64) string {
 	if t > today-86400*7 {
 		weekdays := []string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}
 		weekday := time.Unix(t, 0).Weekday()
+		//超过上周写日期
+		wd := int(weekday+7) % 8
+		twd := int(now.Weekday()+7) % 8
+		if wd > twd {
+			return time.Unix(t, 0).Format("01月02日")
+		}
 		return weekdays[weekday]
 	}
 

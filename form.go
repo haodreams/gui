@@ -15,7 +15,7 @@ type Form struct {
 	color color.NRGBA
 	show  bool
 	Widget[Form]
-	content Contenter
+	content      Contenter
 	bottomOffset unit.Dp
 }
 
@@ -33,13 +33,13 @@ func NewForm(win *Window) *Form {
 	return m.Setup(win)
 }
 
-func (m *Form)Setup(win *Window)*Form{
+func (m *Form) Setup(win *Window) *Form {
 	m.Init(win, m)
 	m.color = win.theme.Bg
 	return m
 }
 
-func (m *Form)SetBottomOffset(offset unit.Dp) *Form{
+func (m *Form) SetBottomOffset(offset unit.Dp) *Form {
 	m.bottomOffset = offset
 	return m
 }
@@ -67,39 +67,35 @@ func (m *Form) Layout(gtx layout.Context) D {
 
 	offset := layout.Inset{}
 
-	maxWidth := unit.Dp(m.MaxWidth)
-	width:= gtx.Metric.PxToDp(m.win.width)
-	if maxWidth > 0 {
-		offset.Left = (unit.Dp(width-maxWidth) / 2)
+	//gtx.Constraints.Max.X 存放的是像素
+	if m.MaxWidth > 0 {
+		maxWidth := gtx.Dp(unit.Dp(m.MaxWidth))         //转为像素
+		offset.Left = unit.Dp(m.win.width-maxWidth) / 2 // (unit.Dp(gtx.Constraints.Max.X-maxWidth) / 2) / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Left < 0 {
 			offset.Left = 0
 		} else {
-			x := offset.Left + maxWidth
-			if x > width{
-				x = width
-			}
-			if gtx.Constraints.Max.X > int(x) {
-				gtx.Constraints.Max.X = int(x)
+			x := int(offset.Left) + maxWidth
+			if gtx.Constraints.Max.X > x {
+				gtx.Constraints.Max.X = x
 			}
 		}
+		offset.Left = gtx.Metric.PxToDp(int(offset.Left))
 	}
 
-	//高度不需要进行转换， 高度是已经计算后的数据
-	maxHeight := gtx.Dp(unit.Dp(m.MaxHeight))
-	if maxHeight > 0 {
-		offset.Top = unit.Dp(m.win.height-maxHeight) / unit.Dp(gtx.Metric.PxPerDp)
+	//gtx.Constraints.Max.Y 存放的是像素
+	if m.MaxHeight > 0 {
+		maxHeight := gtx.Dp(unit.Dp(m.MaxHeight))
+		offset.Top = unit.Dp(m.win.height - maxHeight)
 		if offset.Top < 0 {
 			offset.Top = 0
 		} else {
-			y := int(gtx.Dp(offset.Top)) + maxHeight
-			if y > m.win.height{
-				y = m.win.height
+			y := int(offset.Top) + maxHeight
+			if gtx.Constraints.Max.Y > y {
+				y -= int(gtx.Dp(m.bottomOffset))
+				gtx.Constraints.Max.Y = y
 			}
-			y -= int(gtx.Dp(m.bottomOffset))
-			gtx.Constraints.Max.Y = y 
-			// if gtx.Constraints.Max.Y > y {
-			// }
 		}
+		offset.Top = gtx.Metric.PxToDp(int(offset.Top))
 	}
 
 	offset.Layout(gtx, func(gtx C) D {
