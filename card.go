@@ -197,8 +197,10 @@ func (m *Card) Layout(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					d := m.img.Layout(gtx)
 					if m.UnRead {
+						x:= gtx.Dp(12)
+						y:= gtx.Dp(12)
 						c := color.NRGBA{R: 255, G: 0, B: 0, A: 255}
-						paint.FillShape(gtx.Ops, c, clip.Ellipse{Min: image.Point{d.Size.X - 12, 0}, Max: image.Point{d.Size.X, 12}}.Op(gtx.Ops))
+						paint.FillShape(gtx.Ops, c, clip.Ellipse{Min: image.Point{d.Size.X - x, 0}, Max: image.Point{d.Size.X, y}}.Op(gtx.Ops))
 						//todo 输出文字
 						// 使用内置字体，字号 16px，黑色
 						// textStyle := text.Style{
