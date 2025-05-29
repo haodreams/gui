@@ -33,6 +33,7 @@ func NewNavibar(win *Window, titles []string, contents []Contenter) *navibar {
 	last := len(titles)
 	m.btns = make([]*Button, last)
 	m.contents = make([]Contenter, last)
+	last --
 	for i, title := range titles {
 		btn := NewButton(m.win, title, func() { m.do(i) }).Resize(50, 30).UniformInset(0)
 		btn.SetBackground(m.win.theme.Bg)
@@ -54,7 +55,7 @@ func NewNavibar(win *Window, titles []string, contents []Contenter) *navibar {
 	m.bar = layout.Rigid(func(gtx C) D {
 		return m.barFlex.Layout(gtx, m.childrens...)
 	})
-	m.space = NewSpace(5, 5)
+	m.space = NewSpace(8, 8)
 	return m
 }
 
@@ -68,6 +69,7 @@ func (m *navibar) Layout(gtx layout.Context) D {
 		layout.Flexed(1, func(gtx C) D {
 			return m.contents[m.selected].Layout(gtx)
 		}),
+		m.space,
 		m.bar,
 		m.space,
 	)

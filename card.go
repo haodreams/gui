@@ -10,10 +10,13 @@ package gui
 
 import (
 	"image"
+	"image/color"
 	"sync/atomic"
 	"time"
 
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/widget"
 )
 
@@ -37,6 +40,7 @@ type Card struct {
 	id        int  //删除的识别字段
 	hide      bool //是否不显示
 	widget.Clickable
+	UnRead bool //未读
 }
 
 func NewCard(win *Window, ts int64, title, msg string) *Card {
@@ -190,7 +194,24 @@ func (m *Card) Layout(gtx C) D {
 		//有图标左右排列
 		return m.Clickable.Layout(gtx, func(gtx C) D { //点击
 			return m.Flex.Layout(gtx, //左右排列
-				layout.Rigid(func(gtx C) D { return m.img.Layout(gtx) }), //图标
+				layout.Rigid(func(gtx C) D {
+					d := m.img.Layout(gtx)
+					if m.UnRead {
+						c := color.NRGBA{R: 255, G: 0, B: 0, A: 255}
+						paint.FillShape(gtx.Ops, c, clip.Ellipse{Min: image.Point{d.Size.X - 12, 0}, Max: image.Point{d.Size.X, 12}}.Op(gtx.Ops))
+						//todo 输出文字
+						// 使用内置字体，字号 16px，黑色
+						// textStyle := text.Style{
+						// 	Font:  gofont.Collection(),       // 字体（必填）
+						// 	Size:  unit.Sp(16),               // 字号
+						// 	Color: color.NRGBA{0, 0, 0, 255}, // 颜色
+						// }
+						// layout.Inset{Top: 10, Left: 10}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						// 	return textStyle.Layout(gtx, "Hello, World!") // 在左上角边距 10px 处绘制文字
+						// })
+					}
+					return d
+				}), //图标
 				layout.Flexed(1, func(gtx C) D { //右边上下排列
 					return m.right.Layout(gtx, //上下排列
 						layout.Rigid(func(gtx C) D {
@@ -206,7 +227,7 @@ func (m *Card) Layout(gtx C) D {
 			)
 		})
 	}
-	//有图标左右排列
+	//没有有图标左右排列
 	return m.Clickable.Layout(gtx, func(gtx C) D { //点击
 		return m.right.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
