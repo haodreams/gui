@@ -14,12 +14,24 @@ type Shield struct {
 	color   color.NRGBA
 	show    bool
 	content Contenter
+	cb      func() //渲染前的回调函数
+	onClick func()
+}
+
+func (m *Shield) SetOnClick(onClick func()) *Shield {
+	m.onClick = onClick
+	return m
+}
+func (m *Shield) SetCallback(cb func()) *Shield {
+	m.cb = cb
+	return m
 }
 
 func (m *Shield) Hide() *Shield {
 	m.show = false
 	return m
 }
+
 func (m *Shield) Show() *Shield {
 	m.show = true
 	return m
@@ -41,6 +53,7 @@ func (m *Shield) SetColor(c color.NRGBA) *Shield {
 	return m
 }
 
+
 // Layout draws the scrim using the provided animation. If the animation indicates
 // that the scrim is not visible, this is a no-op.
 func (m *Shield) Layout(gtx layout.Context) D {
@@ -49,6 +62,14 @@ func (m *Shield) Layout(gtx layout.Context) D {
 	}
 	if m.content == nil {
 		return D{}
+	}
+	if m.onClick != nil {
+		if m.Clickable.Clicked(gtx) {
+			m.onClick()
+		}
+	}
+	if m.cb != nil {
+		m.cb()
 	}
 	m.Clickable.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min = gtx.Constraints.Max

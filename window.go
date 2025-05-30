@@ -32,6 +32,7 @@ type Contenter interface {
 // Window holds all of the application state.
 type Window struct {
 	Config
+	OnlyShowShield bool
 	// Theme is used to hold the fonts used throughout the application.
 	container Contenter // 内容容器
 	win       *app.Window
@@ -256,6 +257,9 @@ func (m *Window) RestoreDialogWidth() {
 
 // 设置窗体布局
 func (m *Window) layout(gtx C) D {
+	if m.OnlyShowShield{
+		return m.Shield.Layout(gtx) //只显示屏蔽层
+	}
 	m.width = gtx.Constraints.Max.X
 	m.height = gtx.Constraints.Max.Y
 	m.Metric = gtx.Metric

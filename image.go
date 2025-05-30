@@ -21,6 +21,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
+	"gioui.org/x/component"
 	"golang.org/x/exp/shiny/iconvg"
 )
 
@@ -123,9 +124,11 @@ func LoadPng(data []byte) (img image.Image, err error) {
 type Image struct {
 	Widget[Image]
 	widget.Image
-	img image.Image 
-
-	cb func(gtx layout.Context, ie *Image)
+	img image.Image
+	widget.Clickable
+	onClick func()
+	color   color.NRGBA
+	cb      func(gtx layout.Context, ie *Image)
 }
 
 func NewImage(win *Window, img image.Image) (m *Image) {
@@ -139,8 +142,18 @@ func NewImage(win *Window, img image.Image) (m *Image) {
 	return m
 }
 
-func (m *Image)GetImage()image.Image{
+func (m *Image) SetOnClick(f func()) *Image {
+	m.onClick = f
+	return m
+}
+
+func (m *Image) GetImage() image.Image {
 	return m.img
+}
+
+func (m *Image)SetColor(c color.NRGBA)*Image{
+	m.color = c
+	return m
 }
 
 func (m *Image) SetImage(img image.Image) *Image {
@@ -150,11 +163,21 @@ func (m *Image) SetImage(img image.Image) *Image {
 }
 
 func (m *Image) Layout(gtx layout.Context) D {
-	if m.img == nil{
+	if m.img == nil {
 		return D{}
 	}
 	if m.cb != nil {
 		m.cb(gtx, m)
+	}
+
+	if m.onClick != nil {
+		if m.Clickable.Clicked(gtx) {
+			m.Clickable.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				component.Rect{Color: m.color, Size: gtx.Constraints.Max}.Layout(gtx)
+				return D{Size: gtx.Constraints.Max}
+			})
+		}
 	}
 
 	m.CheckDimensions(&gtx)
