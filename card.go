@@ -114,6 +114,10 @@ func (m *Card) Hide() *Card {
 	return m
 }
 
+func (m *Card)IsHide()bool{
+	return m.hide
+}
+
 func (m *Card) SetOnClick(onClick func(card *Card)) *Card {
 	m.onClick = onClick
 	return m
