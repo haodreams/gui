@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:58:38
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-25 10:40:01
+ * @LastEditTime: 2025-06-04 11:10:17
  * @FilePath: \goui\gui\container.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -91,7 +91,7 @@ func TimeStampFormat(t int64) string {
 		//超过上周写日期
 		wd := int(weekday+7) % 8
 		twd := int(now.Weekday()+7) % 8
-		if wd > twd {
+		if wd >= twd {
 			return time.Unix(t, 0).Format("01月02日")
 		}
 		return weekdays[weekday]
