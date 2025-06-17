@@ -126,6 +126,7 @@ func (m *FixSlice[G]) Push(e *G) {
 		// 队列已满，覆盖队首元素
 		m.array[m.head] = e
 		m.head = (m.head + 1) % m.cap
+		m.tail = m.head
 	} else {
 		m.array[m.tail] = e
 		m.tail = (m.tail + 1) % m.cap
@@ -192,13 +193,6 @@ func generateIndices(start, end int, asc bool) []int {
 func (m *FixSlice[G]) Queue(begin, limit int, orderAsc ...bool) []*G {
 	return m.getElements(begin, limit, orderAsc, func(idx int) uint32 {
 		return (m.head + uint32(idx)) % m.cap
-	})
-}
-
-// 按栈顺序获取元素（后进先出）
-func (m *FixSlice[G]) Stack(begin, limit int, orderAsc ...bool) []*G {
-	return m.getElements(begin, limit, orderAsc, func(idx int) uint32 {
-		return (m.tail - uint32(idx) - 1 + m.cap) % m.cap
 	})
 }
 
