@@ -248,7 +248,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 								flatBtnText.Color = color.NRGBA{R: 0, G: 0, B: 180, A: 255}
 							}
 						}
-						flatBtnText.MaxLines = 1
+						flatBtnText.MaxLines = 2
 						flatBtnText.Truncator = "."
 						return layout.Center.Layout(gtx, flatBtnText.Layout)
 					})
@@ -270,7 +270,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 					}
 					column := m.GetColumn(col)
 					cellText.Alignment = text.Alignment(column.Alignment)
-					cellText.MaxLines = 1
+					cellText.MaxLines = 2
 					cellText.Truncator = "."
 					return cellText.Layout(gtx)
 					//return layout.Center.Layout(gtx, cellText.Layout)
