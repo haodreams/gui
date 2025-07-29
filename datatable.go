@@ -44,8 +44,9 @@ func NewColumn(title string, width int, alig ...text.Alignment) *Column {
 	return &Column{Width: width, Title: title, Alignment: alignment}
 }
 
-func (m *Column) SetOnClick(cb func(colIdx int)) {
+func (m *Column) SetOnClick(cb func(colIdx int))(*Column) {
 	m.cb = cb
+	return  m
 }
 
 type ItemText func(record any, row, col int) string
