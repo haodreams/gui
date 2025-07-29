@@ -6,7 +6,7 @@ require (
 	eliasnaur.com/font v0.0.0-20230308162249-dd43949cb42d
 	gioui.org v0.8.0
 	gioui.org/x v0.8.1
-	golang.org/x/exp/shiny v0.0.0-20250506013437-ce4c2cf36ca6
+	golang.org/x/exp/shiny v0.0.0-20250718183923-645b1fa84792
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/go-text/typesetting v0.2.1 // indirect
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
 	golang.org/x/exp v0.0.0-20240707233637-46b078467d37 // indirect
-	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/image v0.29.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 )
