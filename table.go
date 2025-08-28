@@ -68,8 +68,8 @@ func NewTable(win *Window, table Tabler) *Table {
 	m := new(Table)
 	m.Tabler = table
 	m.Init(win, m)
-	m.MaxWidth = -1
-	m.MaxHeight = -1
+	m.Width = -1
+	m.Height = -1
 	m.rowIdx = -1
 	m.colIdx = -1
 	m.rRowIdx = -1
@@ -83,8 +83,8 @@ func NewTable(win *Window, table Tabler) *Table {
 		Color: color.NRGBA{A: 150},
 		Width: unit.Dp(0),
 	}
-	m.MaxHeight = 0
-	m.MaxWidth = 0
+	m.Height = 0
+	m.Width = 0
 	return m
 }
 

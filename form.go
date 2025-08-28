@@ -68,8 +68,8 @@ func (m *Form) Layout(gtx layout.Context) D {
 	offset := layout.Inset{}
 
 	//gtx.Constraints.Max.X 存放的是像素
-	if m.MaxWidth > 0 {
-		maxWidth := gtx.Dp(unit.Dp(m.MaxWidth))         //转为像素
+	if m.Width > 0 {
+		maxWidth := gtx.Dp(unit.Dp(m.Width))         //转为像素
 		offset.Left = unit.Dp(m.win.width-maxWidth) / 2 // (unit.Dp(gtx.Constraints.Max.X-maxWidth) / 2) / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Left < 0 {
 			offset.Left = 0
@@ -84,8 +84,8 @@ func (m *Form) Layout(gtx layout.Context) D {
 	}
 
 	//gtx.Constraints.Max.Y 存放的是像素
-	if m.MaxHeight > 0 {
-		maxHeight := gtx.Dp(unit.Dp(m.MaxHeight))
+	if m.Height > 0 {
+		maxHeight := gtx.Dp(unit.Dp(m.Height))
 		offset.Top = unit.Dp(m.win.height - maxHeight)
 		if offset.Top < 0 {
 			offset.Top = 0

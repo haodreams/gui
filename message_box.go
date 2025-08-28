@@ -97,16 +97,16 @@ func NewMessage(win *Window, title, content string, modalType ModelType, options
 		options: options,
 	}
 	m.Init(win, m)
-	m.MaxWidth = 400
-	m.lastWidth = m.MaxWidth
-	m.MaxHeight = 200
+	m.Width = 400
+	m.lastWidth = m.Width
+	m.Height = 200
 	m.win = win
 
 	m.Scrim.FinalAlpha = 82 //default
 	return m
 }
 func (m *MessageBox) RestoreWidth() *MessageBox {
-	m.MaxWidth = m.lastWidth
+	m.Width = m.lastWidth
 	return m
 }
 
@@ -178,7 +178,7 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 
 	offset := layout.Inset{}
 
-	maxWidth := gtx.Dp(unit.Dp(m.MaxWidth))
+	maxWidth := gtx.Dp(unit.Dp(m.Width))
 	if maxWidth > 0 {
 		offset.Left = (unit.Dp(gtx.Constraints.Max.X-maxWidth) / 2) / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Left < 0 {
@@ -192,7 +192,7 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 	}
 
 	//高度不需要进行转换， 高度是已经计算后的数据
-	maxHeight := int(m.MaxHeight)
+	maxHeight := int(m.Height)
 	if maxHeight > 0 {
 		offset.Top = unit.Dp(gtx.Constraints.Max.Y-maxHeight) / 2 / unit.Dp(gtx.Metric.PxPerDp)
 		if offset.Top < 0 {
@@ -263,7 +263,7 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 									b.Color = dlgTextColor[m.Type]
 									d = b.Layout(gtx)
 								}
-								m.MaxHeight = unit.Dp( d.Size.Y + dp)
+								m.Height = unit.Dp( d.Size.Y + dp)
 								if m.refreshCount < 3 { //动态刷新
 									// m.win.Log(m.MaxHeight)
 									m.refreshCount ++

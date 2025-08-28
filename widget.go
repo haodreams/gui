@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-27 17:58:55
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 18:22:22
+ * @LastEditTime: 2025-08-28 13:59:20
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\widget.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -35,11 +35,11 @@ type (
 )
 
 type Widget[T any] struct {
-	win       *Window
-	t         *T
-	MaxWidth  unit.Dp
-	MaxHeight unit.Dp
-	Inset     layout.Inset
+	win    *Window
+	t      *T
+	Width  unit.Dp
+	Height unit.Dp
+	Inset  layout.Inset
 
 	th *material.Theme //私有的主题，优先使用私有主题， 没有找到则找默认主题
 }
@@ -93,19 +93,21 @@ func (m *Widget[T]) SetInsetRight(v unit.Dp) *T {
 }
 
 func (m *Widget[T]) CheckDimensions(gtx *layout.Context) {
-	if m.MaxWidth > 0 {
+	if m.Width > 0 {
 		width := gtx.Metric.PxToDp(m.win.width)
-		if m.MaxWidth > width {
-			m.MaxWidth = width
+		if m.Width < width {
+			width = m.Width
 		}
-		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(m.MaxWidth))
+		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(width))
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	}
-	if m.MaxHeight > 0 {
+	if m.Height > 0 {
 		height := gtx.Metric.PxToDp(m.win.height)
-		if m.MaxHeight > height {
-			m.MaxHeight = height
+		if m.Height < height {
+			height = m.Height
 		}
-		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(m.MaxHeight))
+		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(height))
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	}
 
 }
@@ -116,27 +118,27 @@ func (m *Widget[T]) Resize(width, height int) *T {
 }
 
 func (m *Widget[T]) SetWidth(width int) *T {
-	m.MaxWidth = unit.Dp(width)
+	m.Width = unit.Dp(width)
 	return m.t
 }
 
 func (m *Widget[T]) SetHeight(height int) *T {
-	m.MaxHeight = unit.Dp(height)
+	m.Height = unit.Dp(height)
 	return m.t
 }
 
-func (m *Widget[T]) SetMaxWidth(width int) *T {
-	m.MaxWidth = unit.Dp(width)
-	return m.t
-}
+// func (m *Widget[T]) SetMaxWidth(width int) *T {
+// 	m.Width = unit.Dp(width)
+// 	return m.t
+// }
 
-func (m *Widget[T]) SetMaxHeight(height int) *T {
-	m.MaxHeight = unit.Dp(height)
-	return m.t
-}
+// func (m *Widget[T]) SetMaxHeight(height int) *T {
+// 	m.Height = unit.Dp(height)
+// 	return m.t
+// }
 
 func (m *Widget[T]) Default() *T {
-	m.MaxWidth = 110
-	m.MaxHeight = 30
+	m.Width = 110
+	m.Height = 30
 	return m.t
 }
