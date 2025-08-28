@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-27 17:58:55
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-08-28 13:59:20
+ * @LastEditTime: 2025-08-28 14:17:04
  * @FilePath: \dataviewe:\go\src\gitee.com\haodreams\gui\widget.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -39,6 +39,8 @@ type Widget[T any] struct {
 	t      *T
 	Width  unit.Dp
 	Height unit.Dp
+	MaxWidth  unit.Dp
+	MaxHeight unit.Dp
 	Inset  layout.Inset
 
 	th *material.Theme //私有的主题，优先使用私有主题， 没有找到则找默认主题
@@ -110,6 +112,21 @@ func (m *Widget[T]) CheckDimensions(gtx *layout.Context) {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	}
 
+	if m.MaxWidth > 0{
+		width := gtx.Metric.PxToDp(m.win.width)
+		if m.MaxWidth < width {
+			width = m.MaxWidth
+		}
+		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(width))
+	}
+	if m.MaxHeight > 0{
+		height := gtx.Metric.PxToDp(m.win.height)
+		if m.MaxHeight < height {
+			height = m.MaxHeight
+		}
+		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(height))
+	}
+
 }
 func (m *Widget[T]) Resize(width, height int) *T {
 	m.SetWidth(width)
@@ -127,15 +144,15 @@ func (m *Widget[T]) SetHeight(height int) *T {
 	return m.t
 }
 
-// func (m *Widget[T]) SetMaxWidth(width int) *T {
-// 	m.Width = unit.Dp(width)
-// 	return m.t
-// }
+func (m *Widget[T]) SetMaxWidth(width int) *T {
+	m.MaxWidth = unit.Dp(width)
+	return m.t
+}
 
-// func (m *Widget[T]) SetMaxHeight(height int) *T {
-// 	m.Height = unit.Dp(height)
-// 	return m.t
-// }
+func (m *Widget[T]) SetMaxHeight(height int) *T {
+	m.MaxHeight = unit.Dp(height)
+	return m.t
+}
 
 func (m *Widget[T]) Default() *T {
 	m.Width = 110
