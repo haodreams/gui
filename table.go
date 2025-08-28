@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:57:29
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-05-22 16:46:44
+ * @LastEditTime: 2025-08-28 15:24:20
  * @FilePath: \goui\ui\Table.go
  * @Description:
  */
@@ -182,7 +182,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 			})
 		},
 		func(gtx C, row, col int) D { //渲染单元格
-			if m.lastRowIdx != row {
+			if m.lastRowIdx != row || m.lastRowIdx == 0{
 				m.lastRowIdx = row
 				if m.rowChan != nil {
 					if len(m.rowChan) < m.rowChanSize {
