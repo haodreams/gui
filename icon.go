@@ -87,11 +87,18 @@ var CloseIcon *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.NavigationClose)
 	return icon
 }()
-var ArrowDropDownIcon *widget.Icon = func() *widget.Icon {
+var ArrowDropDown *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.NavigationArrowDropDown)
 	return icon
 }()
-
+var ArrowDownward *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.NavigationArrowDownward)
+	return icon
+}()
+var ArrowUpward *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.NavigationArrowUpward)
+	return icon
+}()
 var NaviLeftIcon *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.NavigationChevronLeft)
 	return icon
