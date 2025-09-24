@@ -139,7 +139,8 @@ func (m *Table) Layout(gtx layout.Context) D {
 			}
 
 			if defCount > 0 {
-				free := (constraint - int(used)) / defCount
+				//int(gtx.Metric.PxToDp(constraint))
+				free := (int(gtx.Metric.PxToDp(constraint)) - int(used)) / defCount
 				if free > defWidth {
 					defWidth = free
 				}
@@ -182,7 +183,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 			})
 		},
 		func(gtx C, row, col int) D { //渲染单元格
-			if m.lastRowIdx != row || m.lastRowIdx == 0{
+			if m.lastRowIdx != row || m.lastRowIdx == 0 {
 				m.lastRowIdx = row
 				if m.rowChan != nil {
 					if len(m.rowChan) < m.rowChanSize {
