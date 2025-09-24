@@ -83,7 +83,7 @@ func (m *Tip) Layout(gtx layout.Context) D {
 	}
 
 	// 高度不需要进行转换， 高度是已经计算后的数据
-	maxHeight := int(m.Height)
+	maxHeight := gtx.Dp(unit.Dp(m.Height))
 	if maxHeight > 0 {
 		offset.Top = unit.Dp(45)
 		if offset.Top < 0 {
@@ -95,7 +95,7 @@ func (m *Tip) Layout(gtx layout.Context) D {
 			}
 		}
 	} else {
-		h := gtx.Dp(unit.Dp(15))
+		h := gtx.Dp(unit.Dp(30))
 		if m.win.height-gtx.Constraints.Max.Y < h {
 			offset.Top = 0
 			gtx.Constraints.Max.Y = m.win.height - h
