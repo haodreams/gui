@@ -16,8 +16,8 @@ type Tabs struct {
 	tabs     []*Tab
 	selected int
 	Widget[Tabs]
-
-	cb func()
+	btnHeight unit.Dp
+	cb func(name string)
 	// widget.Clickable
 	// f    func()
 	// text string
@@ -40,7 +40,7 @@ func NewTab(win *Window, title string) *Tab {
 	return m
 }
 
-func (m *Tabs) SetCallback(cb func()) *Tabs {
+func (m *Tabs) SetCallback(cb func(string)) *Tabs {
 	m.cb = cb
 	return m
 }
@@ -62,6 +62,9 @@ func (m *Tabs) GetSelectedTab() *Tab {
 
 func (m *Tabs) SetSelectedTab(selected int) {
 	m.selected = selected
+	if m.cb != nil {
+		m.cb(m.tabs[m.selected].Title)
+	}
 }
 
 func (m *Tabs) GetSelectedTitle() string {
@@ -93,12 +96,17 @@ func (m *Tabs) Layout(gtx layout.Context) D {
 				if t.btn.Clicked(gtx) {
 					m.selected = tabIdx
 					if m.cb != nil {
-						m.cb()
+						m.cb(t.Title)
 					}
 				}
 				var tabWidth int
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
+						if m.btnHeight == 0 {
+							m.btnHeight = gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 +14
+						}
+						gtx.Constraints.Max.Y = gtx.Dp(m.btnHeight)
+						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 						dims := material.Clickable(gtx, &t.btn, func(gtx C) D {
 							return m.Inset.Layout(gtx,
 								material.Body1(th, t.Title).Layout,
