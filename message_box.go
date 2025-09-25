@@ -292,8 +292,6 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 							}
 
 							for i := range ops {
-								i := i
-
 								if ops[i].Button.Clicked(gtx) {
 									m.result = ops[i].Text
 									m.submit()
@@ -302,7 +300,9 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 								items = append(
 									items,
 									layout.Rigid(func(gtx layout.Context) D {
-										gtx.Constraints.Max.Y = gtx.Dp(40)
+										height:= gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 +10
+										gtx.Constraints.Max.Y = gtx.Dp(height)
+										gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 										btn := material.Button(m.Theme(), &ops[i].Button, ops[i].Text)
 										btn.Inset = layout.Inset{
 											Top: 5, Bottom: 5,
