@@ -210,18 +210,9 @@ func (c *Select) box(gtx layout.Context, theme *material.Theme, text string) D {
 		CornerRadius: c.cornerRadius,
 	}
 
-	// if maxWidth == 0 {
-	// 	maxWidth = unit.Dp(gtx.Constraints.Max.X)
-	// }
-
-	// c.size.X = int(maxWidth)
-
-	//c.CheckDimensions(&gtx)
-
 	return border.Layout(gtx, func(gtx layout.Context) D {
 		return c.Inset.Layout(gtx, func(gtx layout.Context) D {
 			// calculate the minimum width of the box, considering icon and padding
-			//gtx.Constraints.Min.X -= gtx.Dp(c.Inset.Bottom)
 			gtx.Constraints.Min.Y -= gtx.Dp(c.Inset.Top + c.Inset.Bottom)
 			gtx.Constraints.Max.Y -= gtx.Dp(c.Inset.Top + c.Inset.Bottom)
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -270,10 +261,6 @@ func (c *Select) Layout(gtx layout.Context) D {
 		c.updateMenuItems(c.Theme())
 	}
 
-	// if c.MinWidth == 0 {
-	// 	c.MinWidth = gtx.Dp(100)
-	// }
-
 	c.CheckDimensions(&gtx)
 	if c.MaxHeight == 0 {
 		gtx.Constraints.Max.Y = c.win.height
@@ -297,10 +284,6 @@ func (c *Select) Layout(gtx layout.Context) D {
 					Left: unit.Dp(4),
 				}
 				return offset.Layout(gtx, func(gtx layout.Context) D {
-					// gtx.Constraints.Min.X = gtx.Dp(c.MinWidth)
-					// if c.MaxWidth != 0 {
-					// 	gtx.Constraints.Max.X = gtx.Dp(c.MaxWidth)
-					// }
 					m := component.Menu(c.Theme(), &c.menu)
 					m.SurfaceStyle.Fill = c.Theme().Palette.Bg
 					return m.Layout(gtx)

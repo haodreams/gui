@@ -86,6 +86,15 @@ func (m *Button) Layout(gtx layout.Context) layout.Dimensions {
 		}
 	}
 
+	if m.Height == 0{
+		textSize:= m.textSize
+		if textSize == 0{
+			textSize = m.Theme().TextSize
+		}
+		// dp:= gtx.Metric.SpToDp(textSize)*1.3 +m.Inset.Top + m.Inset.Bottom
+		m.Height = gtx.Metric.SpToDp(textSize)*1.2 +m.Inset.Top + m.Inset.Bottom
+	}
+
 	m.CheckDimensions(&gtx)
 	if m.icon == nil {
 		btn := material.Button(m.Theme(), &m.Clickable, m.text)
