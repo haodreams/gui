@@ -68,7 +68,7 @@ func NewWindow(opts ...Option) *Window {
 
 	// 初始化Inset
 	if !m.insetInited {
-		Inset(8)(&m.Config)
+		Inset(6)(&m.Config)
 	}
 
 	// Load Go Fonts to theme

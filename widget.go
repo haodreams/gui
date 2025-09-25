@@ -29,19 +29,22 @@ var (
 	//DropDownMenuBg = color.NRGBA{R: 0x2b, G: 0x2d, B: 0x31, A: 0xff}
 )
 
+var gid = 0 //全局id
+
 type (
 	C = layout.Context
 	D = layout.Dimensions
 )
 
 type Widget[T any] struct {
-	win    *Window
-	t      *T
-	Width  unit.Dp
-	Height unit.Dp
+	win       *Window
+	t         *T
+	id        int
+	Width     unit.Dp
+	Height    unit.Dp
 	MaxWidth  unit.Dp
 	MaxHeight unit.Dp
-	Inset  layout.Inset
+	Inset     layout.Inset
 
 	th *material.Theme //私有的主题，优先使用私有主题， 没有找到则找默认主题
 }
@@ -65,6 +68,8 @@ func (m *Widget[T]) Windos() *Window {
 func (m *Widget[T]) Init(win *Window, t *T) {
 	m.win = win
 	m.t = t
+	gid++
+	m.id = gid
 }
 
 func (m *Widget[T]) UniformInset(v unit.Dp) *T {
@@ -112,20 +117,20 @@ func (m *Widget[T]) CheckDimensions(gtx *layout.Context) {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	}
 
-	if m.MaxWidth > 0{
+	if m.MaxWidth > 0 {
 		width := gtx.Metric.PxToDp(m.win.width)
 		if m.MaxWidth < width {
 			width = m.MaxWidth
 		}
 		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(width))
 	}
-	if m.MaxHeight > 0{
+	if m.MaxHeight > 0 {
 		height := gtx.Metric.PxToDp(m.win.height)
 		if m.MaxHeight < height {
 			height = m.MaxHeight
 		}
 		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(height))
-	}
+	} 
 
 }
 func (m *Widget[T]) Resize(width, height int) *T {

@@ -216,13 +216,14 @@ func (c *Select) box(gtx layout.Context, theme *material.Theme, text string) D {
 
 	// c.size.X = int(maxWidth)
 
-	c.CheckDimensions(&gtx)
+	//c.CheckDimensions(&gtx)
 
 	return border.Layout(gtx, func(gtx layout.Context) D {
 		return c.Inset.Layout(gtx, func(gtx layout.Context) D {
 			// calculate the minimum width of the box, considering icon and padding
-			gtx.Constraints.Min.X -= gtx.Dp(8)
-
+			//gtx.Constraints.Min.X -= gtx.Dp(c.Inset.Bottom)
+			gtx.Constraints.Min.Y -= gtx.Dp(c.Inset.Top + c.Inset.Bottom)
+			gtx.Constraints.Max.Y -= gtx.Dp(c.Inset.Top + c.Inset.Bottom)
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) D {
 					return material.Label(theme, theme.TextSize, text).Layout(gtx)
@@ -274,6 +275,9 @@ func (c *Select) Layout(gtx layout.Context) D {
 	// }
 
 	c.CheckDimensions(&gtx)
+	if c.MaxHeight == 0 {
+		gtx.Constraints.Max.Y = c.win.height
+	}
 
 	text := ""
 	if c.selectedOptionIndex >= 0 && c.selectedOptionIndex < len(c.options) {
