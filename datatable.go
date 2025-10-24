@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-22 13:25:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-08-15 10:14:40
+ * @LastEditTime: 2025-10-24 16:53:08
  * @FilePath: \gui\datatable.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -53,7 +53,8 @@ type ItemText func(record any, row, col int) string
 
 type DataTable[G any] struct {
 	list     []*G
-	root     []*G //原始数据不会变化
+	root     []*G  //原始数据不会变化
+	updated  int64 //行更新的时间
 	cols     []*Column
 	textFunc ItemText
 }
@@ -63,13 +64,17 @@ type DataTable[G any] struct {
 // textFunc 回调函数
 func NewDataTable[G any](list []*G, cols []*Column, textFunc ItemText) *DataTable[G] {
 	m := new(DataTable[G])
-	m.list = list
-	m.root = list
+	m.UpdateList(list)
 	m.Init(cols, textFunc)
 	return m
 }
 
+func (m *DataTable[G]) GetUpdateTimeMs() int64 {
+	return m.updated
+}
+
 func (m *DataTable[G]) UpdateList(list []*G) {
+	m.updated = time.Now().UnixMilli()
 	m.root = list
 	m.list = list
 }
@@ -182,7 +187,7 @@ func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 
 func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...func(string) string) {
 	var encode func(string) string = nil
-	if len(encodef) > 0{
+	if len(encodef) > 0 {
 		encode = encodef[0]
 	}
 	n := m.GetColumnCount()
@@ -191,9 +196,9 @@ func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...
 			buf.Write([]byte(","))
 		}
 		text := m.textFunc(record, row, i)
-		if encode != nil{
-			text = encode(text)	
-		}		
+		if encode != nil {
+			text = encode(text)
+		}
 		buf.Write([]byte(text))
 	}
 }
