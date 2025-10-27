@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-22 13:25:46
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-10-24 16:53:08
+ * @LastEditTime: 2025-10-27 10:15:21
  * @FilePath: \gui\datatable.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gioui.org/text"
@@ -54,9 +55,9 @@ type ItemText func(record any, row, col int) string
 type DataTable[G any] struct {
 	list     []*G
 	root     []*G  //原始数据不会变化
-	updated  int64 //行更新的时间
 	cols     []*Column
 	textFunc ItemText
+	lock sync.RWMutex
 }
 
 // list 数组
@@ -69,17 +70,17 @@ func NewDataTable[G any](list []*G, cols []*Column, textFunc ItemText) *DataTabl
 	return m
 }
 
-func (m *DataTable[G]) GetUpdateTimeMs() int64 {
-	return m.updated
-}
 
 func (m *DataTable[G]) UpdateList(list []*G) {
-	m.updated = time.Now().UnixMilli()
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	m.root = list
 	m.list = list
 }
 
 func (m *DataTable[G]) GetList() []*G {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	return m.root
 }
 
@@ -107,6 +108,8 @@ func (m *DataTable[G]) GetColumnWitdh(i int) (width float32) {
 }
 
 func (m *DataTable[G]) GetRow(row int) any {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	list := m.list
 	n := len(list)
 	if row >= n {
@@ -128,6 +131,8 @@ func (m *DataTable[G]) GetColumnCount() (count int) {
 
 // 获取行数
 func (m *DataTable[G]) Size() (size int) {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	return len(m.list)
 }
 
@@ -147,6 +152,8 @@ func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 		err = errors.New("查找的字符串不能是空")
 		return
 	}
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
 	list := reflect.ValueOf(m.root)
 	list = reflect.Indirect(list)

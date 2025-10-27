@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:57:29
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-10-24 17:02:30
+ * @LastEditTime: 2025-10-27 10:07:53
  * @FilePath: \goui\ui\Table.go
  * @Description:
  */
@@ -10,7 +10,6 @@ package gui
 
 import (
 	"image/color"
-	"time"
 
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -35,8 +34,6 @@ type Tabler interface {
 	GetColumnCount() (count int)
 	//获取行数
 	Size() (size int)
-	//获取行数变更后的时间，单位毫秒
-	GetUpdateTimeMs () int64
 }
 
 type Table struct {
@@ -65,6 +62,7 @@ type Table struct {
 	Tabler
 
 	menu *Menu
+	// lock sync.Mutex
 }
 
 func NewTable(win *Window, table Tabler) *Table {
@@ -118,11 +116,6 @@ func (m *Table) SetMenu(menu *Menu) *Table {
 }
 
 func (m *Table) Layout(gtx layout.Context) D {
-	//500 ms 内的数据不要刷新
-	if time.Now().UnixMilli() - m.GetUpdateTimeMs() < 150{
-		return D{}
-	}
-
 	if len(m.headers) != m.GetColumnCount() {
 		m.headers = make([]*widget.Clickable, m.GetColumnCount())
 	}
@@ -191,6 +184,13 @@ func (m *Table) Layout(gtx layout.Context) D {
 			})
 		},
 		func(gtx C, row, col int) D { //渲染单元格
+			defer func(){
+				if e:= recover(); e != nil{
+					return 
+				}
+			}()
+			// m.lock.Lock()
+			// defer m.lock.Unlock()
 			if m.lastRowIdx != row || m.lastRowIdx == 0 {
 				m.lastRowIdx = row
 				if m.rowChan != nil {
