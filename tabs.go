@@ -17,7 +17,7 @@ type Tabs struct {
 	selected int
 	Widget[Tabs]
 	btnHeight unit.Dp
-	cb func(name string)
+	cb        func(name string)
 	// widget.Clickable
 	// f    func()
 	// text string
@@ -28,6 +28,13 @@ type Tab struct {
 	Title string
 	Widget[Tab]
 	*Container
+	onced bool   // 是否执行过一次
+	once  func() // 只执行一次的任务
+}
+
+func (m *Tab) SetOnceTask(task func()) *Tab {
+	m.once = task
+	return m
 }
 
 func NewTab(win *Window, title string) *Tab {
@@ -103,7 +110,7 @@ func (m *Tabs) Layout(gtx layout.Context) D {
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
 						if m.btnHeight == 0 {
-							m.btnHeight = gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 +14
+							m.btnHeight = gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 + 14
 						}
 						gtx.Constraints.Max.Y = gtx.Dp(m.btnHeight)
 						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -130,7 +137,12 @@ func (m *Tabs) Layout(gtx layout.Context) D {
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return m.tabs[m.selected].Layout(gtx)
+			tab := m.tabs[m.selected]
+			if tab.once != nil && !tab.onced {
+				tab.onced = true
+				tab.once()
+			}
+			return tab.Layout(gtx)
 			// return m.slider.Layout(gtx, func(gtx C) D {
 			// 	//fill(gtx, dynamicColor(tabs.selected), dynamicColor(tabs.selected+1))
 			// 	// return layout.Center.Layout(gtx,
