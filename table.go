@@ -2,7 +2,7 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2024-07-20 16:57:29
  * @LastEditors: wangjun haodreams@163.com
- * @LastEditTime: 2025-08-28 15:24:20
+ * @LastEditTime: 2025-10-27 10:07:53
  * @FilePath: \goui\ui\Table.go
  * @Description:
  */
@@ -62,6 +62,7 @@ type Table struct {
 	Tabler
 
 	menu *Menu
+	// lock sync.Mutex
 }
 
 func NewTable(win *Window, table Tabler) *Table {
@@ -183,6 +184,13 @@ func (m *Table) Layout(gtx layout.Context) D {
 			})
 		},
 		func(gtx C, row, col int) D { //渲染单元格
+			defer func(){
+				if e:= recover(); e != nil{
+					return 
+				}
+			}()
+			// m.lock.Lock()
+			// defer m.lock.Unlock()
 			if m.lastRowIdx != row || m.lastRowIdx == 0 {
 				m.lastRowIdx = row
 				if m.rowChan != nil {
