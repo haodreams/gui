@@ -40,6 +40,11 @@ func NewButton(win *Window, text string, f func()) *Button {
 	return m
 }
 
+func (m *Button) SetText(text string) *Button {
+	m.text = text
+	return m
+}
+
 func (m *Button) SetHorizontal() *Button {
 	m.Axis = layout.Horizontal
 	return m
@@ -86,13 +91,13 @@ func (m *Button) Layout(gtx layout.Context) layout.Dimensions {
 		}
 	}
 
-	if m.Height == 0{
-		textSize:= m.textSize
-		if textSize == 0{
+	if m.Height == 0 {
+		textSize := m.textSize
+		if textSize == 0 {
 			textSize = m.Theme().TextSize
 		}
 		// dp:= gtx.Metric.SpToDp(textSize)*1.3 +m.Inset.Top + m.Inset.Bottom
-		m.Height = gtx.Metric.SpToDp(textSize)*1.2 +m.Inset.Top + m.Inset.Bottom
+		m.Height = gtx.Metric.SpToDp(textSize)*1.2 + m.Inset.Top + m.Inset.Bottom
 	}
 
 	m.CheckDimensions(&gtx)
