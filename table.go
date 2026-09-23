@@ -23,8 +23,8 @@ import (
 type Tabler interface {
 	//获取标题
 	GetTitle(i int) (title string)
-	//获取单元格数据
-	GetItemText(record any, row, col int) (text string)
+	//获取单元格数据和颜色
+	GetItemTextColor(record any, row, col int) (text string, color *color.NRGBA)
 	//获取列宽度
 	GetColumnWitdh(i int) (width float32)
 	//获取列属性
@@ -184,9 +184,9 @@ func (m *Table) Layout(gtx layout.Context) D {
 			})
 		},
 		func(gtx C, row, col int) D { //渲染单元格
-			defer func(){
-				if e:= recover(); e != nil{
-					return 
+			defer func() {
+				if e := recover(); e != nil {
+					return
 				}
 			}()
 			// m.lock.Lock()
@@ -200,7 +200,7 @@ func (m *Table) Layout(gtx layout.Context) D {
 				}
 			}
 			record := m.GetRow(row)
-			txt := m.GetItemText(record, row, col)
+			txt, textColor := m.GetItemTextColor(record, row, col)
 			idx := row*m.GetColumnCount() + col
 			cell := m.cells[idx]
 			if cell == nil {
@@ -256,6 +256,10 @@ func (m *Table) Layout(gtx layout.Context) D {
 							} else {
 								flatBtnText.Color = color.NRGBA{R: 0, G: 0, B: 180, A: 255}
 							}
+						} else {
+							if textColor != nil {
+								flatBtnText.Color = *textColor
+							}
 						}
 						flatBtnText.MaxLines = 2
 						flatBtnText.Truncator = "."
@@ -275,6 +279,10 @@ func (m *Table) Layout(gtx layout.Context) D {
 							cellText.Color = color.NRGBA{R: 0, G: 0, B: 255, A: 255}
 						} else {
 							cellText.Color = color.NRGBA{R: 0, G: 0, B: 180, A: 255}
+						}
+					} else {
+						if textColor != nil {
+							cellText.Color = *textColor
 						}
 					}
 					column := m.GetColumn(col)

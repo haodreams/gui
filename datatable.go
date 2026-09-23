@@ -11,6 +11,7 @@ package gui
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"reflect"
 	"strconv"
@@ -51,25 +52,31 @@ func (m *Column) SetOnClick(cb func(colIdx int)) *Column {
 }
 
 type ItemText func(record any, row, col int) string
+type ItemTextColor func(record any, row, col int) (text string, c *color.NRGBA)
 
 type DataTable[G any] struct {
-	list     []*G
-	root     []*G  //原始数据不会变化
-	cols     []*Column
-	textFunc ItemText
-	lock sync.RWMutex
+	list []*G
+	root []*G //原始数据不会变化
+	cols []*Column
+	// textFunc  ItemText
+	colorFunc ItemTextColor
+	lock      sync.RWMutex
 }
 
 // list 数组
 // cols 可为空
 // textFunc 回调函数
-func NewDataTable[G any](list []*G, cols []*Column, textFunc ItemText) *DataTable[G] {
+func NewDataTable[G any](list []*G, cols []*Column, textFunc ItemTextColor) *DataTable[G] {
 	m := new(DataTable[G])
 	m.UpdateList(list)
 	m.Init(cols, textFunc)
 	return m
 }
 
+// 设置颜色回调函数
+func (m *DataTable[G]) SetTextColorFunc(colorFunc ItemTextColor) {
+	m.colorFunc = colorFunc
+}
 
 func (m *DataTable[G]) UpdateList(list []*G) {
 	m.lock.Lock()
@@ -84,7 +91,7 @@ func (m *DataTable[G]) GetList() []*G {
 	return m.root
 }
 
-func (m *DataTable[G]) Init(cols []*Column, textFunc ItemText) {
+func (m *DataTable[G]) Init(cols []*Column, textFunc ItemTextColor) {
 	if cols == nil && textFunc == nil {
 		cols, textFunc = MakeColumns(m.root, nil)
 	}
@@ -93,7 +100,7 @@ func (m *DataTable[G]) Init(cols []*Column, textFunc ItemText) {
 		m.cols = cols
 	}
 	if textFunc != nil {
-		m.textFunc = textFunc
+		m.colorFunc = textFunc
 	}
 }
 
@@ -136,10 +143,10 @@ func (m *DataTable[G]) Size() (size int) {
 	return len(m.list)
 }
 
-// 获取单元格数据
-func (m *DataTable[G]) GetItemText(r any, row int, col int) (text string) {
+// 获取单元格颜色
+func (m *DataTable[G]) GetItemTextColor(r any, row int, col int) (text string, c *color.NRGBA) {
 	record := m.list[row]
-	return m.textFunc(record, row, col)
+	return m.colorFunc(record, row, col)
 }
 
 func (m *DataTable[G]) ResetFind() {
@@ -183,7 +190,8 @@ func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 
 	for i := 0; i < size; i++ {
 		row := m.GetRow(i)
-		if strings.Contains(m.GetItemText(row, i, colIdx), text) {
+		text, _ := m.GetItemTextColor(row, i, colIdx)
+		if strings.Contains(text, text) {
 			newList.Index(idx).Set(list.Index(i))
 			idx++
 			continue
@@ -202,7 +210,7 @@ func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...
 		if i != 0 {
 			buf.Write([]byte(","))
 		}
-		text := m.textFunc(record, row, i)
+		text, _ := m.GetItemTextColor(record, row, i)
 		if encode != nil {
 			text = encode(text)
 		}
@@ -210,7 +218,7 @@ func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...
 	}
 }
 
-func MakeColumns(list any, mapColumn map[string]*Column) (cols []*Column, f ItemText) {
+func MakeColumns(list any, mapColumn map[string]*Column) (cols []*Column, f ItemTextColor) {
 	key := map[string][]int{}
 	t := reflect.TypeOf(list)
 	t = t.Elem()
@@ -242,9 +250,9 @@ func MakeColumns(list any, mapColumn map[string]*Column) (cols []*Column, f Item
 		})
 		cols[j+1] = &col
 	}
-	f = func(row any, rowIdx, col int) (text string) {
+	f = func(row any, rowIdx, col int) (text string, c *color.NRGBA) {
 		if col == 0 {
-			return strconv.Itoa(rowIdx + 1)
+			return strconv.Itoa(rowIdx + 1), nil
 		}
 		v := reflect.ValueOf(row)
 		v = reflect.Indirect(v)
@@ -252,14 +260,14 @@ func MakeColumns(list any, mapColumn map[string]*Column) (cols []*Column, f Item
 		v = v.FieldByIndex(cols[col].Ids)
 		if strings.HasSuffix(cols[col].Key, "time") {
 			if v.CanInt() {
-				return time.Unix(v.Int(), 0).Format("2006-01-02 15:04:05")
+				return time.Unix(v.Int(), 0).Format("2006-01-02 15:04:05"), nil
 			}
-			return fmt.Sprint(v)
+			return fmt.Sprint(v), nil
 		} else if v.CanFloat() {
-			return strconv.FormatFloat(v.Float(), 'f', 3, 64)
+			return strconv.FormatFloat(v.Float(), 'f', 3, 64), nil
 		}
 
-		return fmt.Sprint(v)
+		return fmt.Sprint(v), nil
 	}
 	return
 }
