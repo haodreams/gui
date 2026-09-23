@@ -37,7 +37,7 @@ type Window struct {
 	container Contenter // 内容容器
 	win       *app.Window
 	prompt    *MessageBox //消息对话框
-	tip *Tip
+	tip       *Tip
 	*explorer.Explorer
 
 	Metric    unit.Metric       //
@@ -75,12 +75,12 @@ func NewWindow(opts ...Option) *Window {
 	if m.theme.Shaper == nil {
 		m.theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection())) // 加载Go Fonts字库
 	}
-	m.prompt = NewMessage(m, "", "", ModalInfo)       // 创建消息对话框
-	m.tip  = NewTip(m, "")
+	m.prompt = NewMessage(m, "", "", ModalInfo) // 创建消息对话框
+	m.tip = NewTip(m, "")
 	m.statusBar.Init(m).show = m.Config.showStatusBar // 初始化状态栏, 显示状态栏
 	m.Explorer = explorer.NewExplorer(m.win)          // 初始化文件浏览器
 	m.Shield.SetColor(m.theme.Bg)                     // 设置屏蔽层颜色
-	m.Form.Setup(m)                       //设置对话框的背景色
+	m.Form.Setup(m)                                   //设置对话框的背景色
 
 	m.dataDir, err = app.DataDir() //
 	if err != nil {
@@ -90,7 +90,7 @@ func NewWindow(opts ...Option) *Window {
 	return m
 }
 
-func (m *Window)Tip(msg string, msDelay ...int64){
+func (m *Window) Tip(msg string, msDelay ...int64) {
 	m.tip.Tip(msg, msDelay...)
 }
 
@@ -263,7 +263,7 @@ func (m *Window) RestoreDialogWidth() {
 
 // 设置窗体布局
 func (m *Window) layout(gtx C) D {
-	if m.OnlyShowShield{
+	if m.OnlyShowShield {
 		return m.Shield.Layout(gtx) //只显示屏蔽层
 	}
 	m.width = gtx.Constraints.Max.X
@@ -302,15 +302,10 @@ func (m *Window) layout(gtx C) D {
 		layout.Expanded(func(gtx C) D { //显示对话框的级别应该最高
 			return m.prompt.Layout(gtx)
 		}),
-		layout.Expanded(func(gtx C)D{
-			return  m.tip.Layout(gtx)
+		layout.Expanded(func(gtx C) D {
+			return m.tip.Layout(gtx)
 		}),
 	)
-}
-
-// 设置窗体内容
-func (m *Window) SetContent(layout Contenter) {
-	m.container = layout
 }
 
 // Run handles window events and renders the application.
@@ -329,7 +324,9 @@ func (m *Window) Run() error {
 		// detect the type of the event.
 		switch e := et.(type) {
 		case app.FrameEvent:
+			// fmt.Println("==== FrameEvent ====")
 			gtx := app.NewContext(&ops, e)
+			// gtx.Execute(op.InvalidateCmd{})
 			m.layout(gtx)
 			e.Frame(gtx.Ops)
 		case app.DestroyEvent:
@@ -343,6 +340,11 @@ func (m *Window) Run() error {
 			}
 		}
 	}
+}
+
+// 设置窗体内容
+func (m *Window) SetContent(layout Contenter) {
+	m.container = layout
 }
 
 // 运行窗体
