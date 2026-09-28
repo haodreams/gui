@@ -9,6 +9,7 @@
 package gui
 
 import (
+	"log"
 	"os"
 	"strings"
 
@@ -263,6 +264,11 @@ func (m *Window) RestoreDialogWidth() {
 
 // 设置窗体布局
 func (m *Window) layout(gtx C) D {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("layout panic: %v", err)
+		}
+	}()
 	if m.OnlyShowShield {
 		return m.Shield.Layout(gtx) //只显示屏蔽层
 	}
