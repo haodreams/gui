@@ -131,6 +131,11 @@ func (m *DataTable[G]) GetColumn(i int) *Column {
 	return m.cols[i]
 }
 
+// 获取所有列属性
+func (m *DataTable[G]) GetColumns() []*Column {
+	return m.cols
+}
+
 // 获取列个数
 func (m *DataTable[G]) GetColumnCount() (count int) {
 	return len(m.cols)
