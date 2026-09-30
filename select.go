@@ -190,6 +190,13 @@ func (c *Select) SetOptions(options ...*SelectOption) {
 	}
 }
 
+func (c *Select) Value() string {
+	if len(c.options) == 0 {
+		return ""
+	}
+	return c.options[c.selectedOptionIndex].Value
+}
+
 func (c *Select) GetSelected() *SelectOption {
 	if len(c.options) == 0 {
 		return nil
