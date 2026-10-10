@@ -116,16 +116,20 @@ func (m *Table) SetMenu(menu *Menu) *Table {
 }
 
 func (m *Table) Layout(gtx layout.Context) D {
-	if len(m.headers) != m.GetColumnCount() {
-		m.headers = make([]*widget.Clickable, m.GetColumnCount())
+	nRow := m.GetColumnCount()
+	if nRow == 0 {
+		return D{}
+	}
+	if len(m.headers) != nRow {
+		m.headers = make([]*widget.Clickable, nRow)
 	}
 
-	if len(m.cells) != m.Size()*m.GetColumnCount() {
-		m.cells = make([]*widget.Clickable, m.Size()*m.GetColumnCount())
+	if len(m.cells) != m.Size()*nRow {
+		m.cells = make([]*widget.Clickable, m.Size()*nRow)
 	}
 	m.CheckDimensions(&gtx)
 
-	return component.Table(m.Theme(), &m.GridState).Layout(gtx, m.Size(), m.GetColumnCount(),
+	return component.Table(m.Theme(), &m.GridState).Layout(gtx, m.Size(), nRow,
 		func(axis layout.Axis, index, constraint int) int {
 			used := float32(0)
 			defCount := 0

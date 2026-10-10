@@ -92,8 +92,14 @@ func (m *DataTable[G]) GetList() []*G {
 }
 
 func (m *DataTable[G]) Init(cols []*Column, textFunc ItemTextColor) {
-	if cols == nil && textFunc == nil {
-		cols, textFunc = MakeColumns(m.root, nil)
+	if cols == nil || textFunc == nil {
+		cols1, textFunc1 := MakeColumns(m.root, nil)
+		if cols == nil {
+			cols = cols1
+		}
+		if textFunc == nil {
+			textFunc = textFunc1
+		}
 	}
 
 	if cols != nil {
