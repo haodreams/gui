@@ -10,6 +10,7 @@ package gui
 
 import (
 	"image/color"
+	"sync/atomic"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -29,7 +30,7 @@ var (
 	//DropDownMenuBg = color.NRGBA{R: 0x2b, G: 0x2d, B: 0x31, A: 0xff}
 )
 
-var gid = 0 //全局id
+var gid uint32 //全局id
 
 type (
 	C = layout.Context
@@ -68,8 +69,7 @@ func (m *Widget[T]) Windos() *Window {
 func (m *Widget[T]) Init(win *Window, t *T) {
 	m.win = win
 	m.t = t
-	gid++
-	m.id = gid
+	m.id = int(atomic.AddUint32(&gid, 1))
 }
 
 func (m *Widget[T]) UniformInset(v unit.Dp) *T {

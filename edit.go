@@ -53,7 +53,7 @@ func (m *Edit)SetColor(c *color.NRGBA) *Edit {
 }
 
 func (m *Edit)SetTextSize(size unit.Sp) *Edit {
-	m.textSize += size
+	m.textSize = size
 	return m	
 }
 

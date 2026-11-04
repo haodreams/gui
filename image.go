@@ -170,14 +170,12 @@ func (m *Image) Layout(gtx layout.Context) D {
 		m.cb(gtx, m)
 	}
 
-	if m.onClick != nil {
-		if m.Clickable.Clicked(gtx) {
-			m.Clickable.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				component.Rect{Color: m.color, Size: gtx.Constraints.Max}.Layout(gtx)
-				return D{Size: gtx.Constraints.Max}
-			})
+	if m.Clickable.Clicked(gtx) {
+		if m.onClick != nil {
+			m.onClick()
 		}
+		gtx.Constraints.Min = gtx.Constraints.Max
+		component.Rect{Color: m.color, Size: gtx.Constraints.Max}.Layout(gtx)
 	}
 
 	m.CheckDimensions(&gtx)

@@ -156,7 +156,12 @@ func (m *DataTable[G]) Size() (size int) {
 
 // 获取单元格颜色
 func (m *DataTable[G]) GetItemTextColor(r any, row int, col int) (text string, c *color.NRGBA) {
-	record := m.list[row]
+	record := r
+	if record == nil {
+		m.lock.RLock()
+		record = m.list[row]
+		m.lock.RUnlock()
+	}
 	return m.colorFunc(record, row, col)
 }
 
@@ -167,48 +172,33 @@ func (m *DataTable[G]) ResetFind() {
 func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
-		err = errors.New("查找的字符串不能是空")
-		return
+		return errors.New("查找的字符串不能是空")
 	}
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
-	list := reflect.ValueOf(m.root)
-	list = reflect.Indirect(list)
-	if !(list.Kind() == reflect.Slice || list.Kind() == reflect.Array) {
-		err = errors.New("内部错误, 关联数组错误")
-		return
-	}
-
 	size := m.Size()
 	if size == 0 {
-		return
+		return errors.New("not found")
 	}
 
-	idx := 0
-
-	newList := reflect.New(list.Type()).Elem()
-	newList.Set(reflect.MakeSlice(list.Type(), list.Len(), list.Cap()))
-
-	defer func() {
-		if idx >= 0 {
-			newList.SetLen(idx)
-			m.list = newList.Interface().([]*G)
-		} else {
-			err = errors.New("not found")
-		}
-	}()
-
+	newList := make([]*G, 0, size)
 	for i := 0; i < size; i++ {
 		row := m.GetRow(i)
-		text, _ := m.GetItemTextColor(row, i, colIdx)
-		if strings.Contains(text, text) {
-			newList.Index(idx).Set(list.Index(i))
-			idx++
+		if row == nil {
 			continue
 		}
+		cellText, _ := m.GetItemTextColor(row, i, colIdx)
+		if strings.Contains(cellText, text) {
+			newList = append(newList, row.(*G))
+		}
 	}
-	return
+
+	if len(newList) == 0 {
+		return errors.New("not found")
+	}
+	m.list = newList
+	return nil
 }
 
 func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...func(string) string) {

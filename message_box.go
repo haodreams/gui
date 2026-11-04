@@ -29,16 +29,17 @@ const (
 	IconPositionEnd   = 1
 )
 
+// 对话框语义配色(参考 Ant Design 5 色板): 浅色背景 + 同色系数值主色文字
 var (
 	dlgBgs = []color.NRGBA{
-		{R: 224, G: 236, B: 255, A: 0xFF}, //info
-		{R: 255, G: 255, B: 224, A: 0xFF}, //warn
-		{R: 255, G: 224, B: 224, A: 0xFF}, //error
+		{R: 0xE6, G: 0xF4, B: 0xFF, A: 0xFF}, //info  #E6F4FF 浅蓝
+		{R: 0xFF, G: 0xF7, B: 0xE6, A: 0xFF}, //warn  #FFF7E6 浅橙
+		{R: 0xFF, G: 0xF1, B: 0xF0, A: 0xFF}, //error #FFF1F0 浅红
 	}
 	dlgTextColor = []color.NRGBA{
-		{R: 0, G: 0, B: 255, A: 255},  //info
-		{R: 0, G: 0, B: 0, A: 255},    //warn
-		{R: 255, G: 0, B: 0, A: 0xFF}, //error
+		{R: 0x16, G: 0x77, B: 0xFF, A: 0xFF}, //info  #1677FF
+		{R: 0xFA, G: 0x8C, B: 0x16, A: 0xFF}, //warn  #FA8C16
+		{R: 0xFF, G: 0x4D, B: 0x4F, A: 0xFF}, //error #FF4D4F
 	}
 )
 
