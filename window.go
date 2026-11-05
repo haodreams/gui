@@ -37,7 +37,7 @@ type Window struct {
 	// Theme is used to hold the fonts used throughout the application.
 	container Contenter // 内容容器
 	win       *app.Window
-	prompt    *MessageBox //消息对话框
+	dlg       *MessageBox //消息对话框
 	tip       *Tip
 	*explorer.Explorer
 
@@ -76,7 +76,7 @@ func NewWindow(opts ...Option) *Window {
 	if m.theme.Shaper == nil {
 		m.theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection())) // 加载Go Fonts字库
 	}
-	m.prompt = NewMessage(m, "", "", ModalInfo) // 创建消息对话框
+	m.dlg = NewMessage(m, "", "", ModalInfo) // 创建消息对话框
 	m.tip = NewTip(m, "")
 	m.statusBar.Init(m).show = m.Config.showStatusBar // 初始化状态栏, 显示状态栏
 	m.Explorer = explorer.NewExplorer(m.win)          // 初始化文件浏览器
@@ -175,58 +175,58 @@ func (m *Window) Error(title string, contant string) {
 
 // 消息对话框
 func (m *Window) MessageBox(title string, contant string, mode ModelType) *MessageBox {
-	m.prompt.content = nil
-	m.prompt.Title = title
-	m.prompt.Message = contant
-	m.prompt.Type = mode
-	m.prompt.SetOptions([]MBOption{{Text: "确定"}}...)
-	m.prompt.SetOnSubmit(func(selectedOption string, remember bool) {
+	m.dlg.content = nil
+	m.dlg.Title = title
+	m.dlg.Message = contant
+	m.dlg.Type = mode
+	m.dlg.SetOptions([]MBOption{{Text: "确定"}}...)
+	m.dlg.SetOnSubmit(func(selectedOption string, remember bool) {
 		if selectedOption == "确定" {
-			m.prompt.Hide()
+			m.dlg.Hide()
 			return
 		}
 	})
-	m.prompt.Show()
-	return m.prompt
+	m.dlg.Show()
+	return m.dlg
 }
 
 // 消息对话框
 func (m *Window) MsgBox(title string, contant string, mode ModelType, cb func(selectedOption string, remember bool), options ...MBOption) *MessageBox {
-	m.prompt.content = nil
-	m.prompt.Title = title
-	m.prompt.Message = contant
-	m.prompt.Type = mode
+	m.dlg.content = nil
+	m.dlg.Title = title
+	m.dlg.Message = contant
+	m.dlg.Type = mode
 	if len(options) > 0 {
-		m.prompt.SetOptions(options...)
+		m.dlg.SetOptions(options...)
 	} else {
-		m.prompt.SetOptions([]MBOption{{Text: "确定"}}...)
+		m.dlg.SetOptions([]MBOption{{Text: "确定"}}...)
 	}
 	if cb != nil {
-		m.prompt.SetOnSubmit(cb)
+		m.dlg.SetOnSubmit(cb)
 	} else {
-		m.prompt.SetOnSubmit(func(selectedOption string, remember bool) {
+		m.dlg.SetOnSubmit(func(selectedOption string, remember bool) {
 			if selectedOption == "确定" {
-				m.prompt.Hide()
+				m.dlg.Hide()
 				return
 			}
 		})
 	}
 
-	m.prompt.Show()
-	return m.prompt
+	m.dlg.Show()
+	return m.dlg
 }
 
 // 输入对话框
 func (m *Window) Prompt(title string, message string, f func(text string)) *MessageBox {
-	m.prompt.Title = title
-	edit := NewEdit(m, message).SetWidth(int(m.prompt.Width - 20))
+	m.dlg.Title = title
+	edit := NewEdit(m, message).SetWidth(int(m.dlg.Width - 20))
 	edit.SetOnSubmit(f)
-	m.prompt.content = edit
-	m.prompt.Type = ModalInfo
+	m.dlg.content = edit
+	m.dlg.Type = ModalInfo
 
-	m.prompt.SetOptions([]MBOption{{Text: "确定"}, {Text: "取消"}}...)
-	m.prompt.SetOnSubmit(func(selectedOption string, remember bool) {
-		m.prompt.Hide()
+	m.dlg.SetOptions([]MBOption{{Text: "确定"}, {Text: "取消"}}...)
+	m.dlg.SetOnSubmit(func(selectedOption string, remember bool) {
+		m.dlg.Hide()
 		if selectedOption == "确定" {
 			if f != nil {
 				f(edit.Text())
@@ -234,32 +234,30 @@ func (m *Window) Prompt(title string, message string, f func(text string)) *Mess
 			return
 		}
 	})
-	m.prompt.Show()
-	return m.prompt
+	m.dlg.Show()
+	return m.dlg
 }
 
 // 自定义对话框ModalInfo
 func (m *Window) ShowDialog(title string, content Contenter, f func(text string), options ...MBOption) *MessageBox {
-	m.prompt.Title = title
-	m.prompt.Type = ModalInfo
-	m.prompt.content = content
-	m.prompt.SetOnSubmit(func(selectedOption string, remember bool) {
-		m.prompt.Hide()
+	m.dlg.Title = title
+	m.dlg.Type = ModalInfo
+	m.dlg.content = content
+	m.dlg.SetOnSubmit(func(selectedOption string, remember bool) {
+		m.dlg.Hide()
 		f(selectedOption)
 	})
 
 	if len(options) > 0 {
-		m.prompt.SetOptions(options...)
-	} else {
-		m.prompt.SetOptions([]MBOption{{Text: "确定"}}...)
+		m.dlg.SetOptions(options...)
 	}
-	m.prompt.Show()
-	return m.prompt
+	m.dlg.Show()
+	return m.dlg
 }
 
 // 对话框恢复上一次的大小
 func (m *Window) RestoreDialogWidth() {
-	m.prompt.RestoreWidth()
+	m.dlg.RestoreWidth()
 }
 
 // 设置窗体布局
@@ -306,7 +304,7 @@ func (m *Window) layout(gtx C) D {
 			return m.Shield.Layout(gtx)
 		}),
 		layout.Expanded(func(gtx C) D { //显示对话框的级别应该最高
-			return m.prompt.Layout(gtx)
+			return m.dlg.Layout(gtx)
 		}),
 		layout.Expanded(func(gtx C) D {
 			return m.tip.Layout(gtx)
