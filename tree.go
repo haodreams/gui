@@ -21,6 +21,12 @@ import (
 	"gioui.org/widget/material"
 )
 
+type TreeChild[G any] struct {
+	Label    string
+	Data     *G
+	Children []*TreeChild[G]
+}
+
 // TreeNode 树节点, Data 为 nil 表示目录节点, 否则为叶子(数据)节点
 type TreeNode[G any] struct {
 	Name     string         //当前层级名称(路径中的一段)
