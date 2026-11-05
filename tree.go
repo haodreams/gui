@@ -162,8 +162,6 @@ func (m *Tree[G]) buildChild(c *TreeChild[G], parent *TreeNode[G], depth int, ex
 	if len(c.Children) > 0 {
 		if v, ok := expanded[node.path]; ok {
 			node.Expanded = v
-		} else {
-			node.Expanded = depth == 0 //默认展开根节点
 		}
 		for _, child := range c.Children {
 			if n := m.buildChild(child, node, depth+1, expanded); n != nil {
