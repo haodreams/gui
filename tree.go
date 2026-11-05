@@ -2,14 +2,13 @@
  * @Author: wangjun haodreams@163.com
  * @Date: 2026-11-04
  * @FilePath: \gui\tree.go
- * @Description: 通用树控件, 按key(默认以"."分隔)将扁平数据构建为树形结构展示
+ * @Description: 通用树控件, 由树形数据(TreeChild)构建展示
  */
 package gui
 
 import (
 	"image"
 	"image/color"
-	"strings"
 	"sync"
 
 	"gioui.org/layout"
@@ -21,6 +20,7 @@ import (
 	"gioui.org/widget/material"
 )
 
+// TreeChild 树形数据, Label 为节点显示名, Children 为空表示叶子节点
 type TreeChild[G any] struct {
 	Label    string
 	Data     *G
@@ -29,14 +29,14 @@ type TreeChild[G any] struct {
 
 // TreeNode 树节点, Data 为 nil 表示目录节点, 否则为叶子(数据)节点
 type TreeNode[G any] struct {
-	Name     string         //当前层级名称(路径中的一段)
+	Name     string         //节点名称
 	Data     *G             //叶子节点携带的数据
 	Parent   *TreeNode[G]   //父节点
 	Children []*TreeNode[G] //子节点
 	Depth    int            //层级深度, 根为0
 	Expanded bool           //是否展开
 
-	childIdx  map[string]*TreeNode[G]
+	path      string //全路径, 用于重建树时恢复展开和选中状态
 	clickable *widget.Clickable
 }
 
@@ -63,37 +63,25 @@ type Tree[G any] struct {
 	Widget[Tree[G]]
 	list widget.List
 
-	roots    []*TreeNode[G]
-	rootIdx  map[string]*TreeNode[G]
-	flat     []*TreeNode[G] //当前可见节点(按展开状态扁平化)
-	selected *TreeNode[G]
-	clickNum int
-	dataSize int //叶子(数据)节点总数
+	roots      []*TreeNode[G]
+	flat       []*TreeNode[G] //当前可见节点(按展开状态扁平化)
+	selected   *TreeNode[G]
+	selectedId string
+	clickNum   int
+	dataSize   int //叶子(数据)节点总数
 
 	lock      sync.RWMutex
-	sep       string
-	keyFunc   func(data *G) string
 	textFunc  TreeTextFunc[G]
 	clickFunc TreeClickFunc[G]
 }
 
 // NewTree 创建树控件
-// keyFunc 从数据中取出层级key, 默认按"."分隔, 如 "W3.GPS"
 // textFunc 返回节点显示文本, 可为nil(默认显示节点名)
-func NewTree[G any](win *Window, keyFunc func(data *G) string, textFunc TreeTextFunc[G]) *Tree[G] {
+func NewTree[G any](win *Window, textFunc TreeTextFunc[G]) *Tree[G] {
 	m := new(Tree[G])
 	m.Init(win, m)
-	m.keyFunc = keyFunc
 	m.textFunc = textFunc
-	m.sep = "."
-	m.rootIdx = map[string]*TreeNode[G]{}
 	m.list.Axis = layout.Vertical
-	return m
-}
-
-// SetSeparator 设置key的分隔符, 默认为"."
-func (m *Tree[G]) SetSeparator(sep string) *Tree[G] {
-	m.sep = sep
 	return m
 }
 
@@ -117,50 +105,85 @@ func (m *Tree[G]) GetSelected() *TreeNode[G] {
 	return m.selected
 }
 
-// UpdateList 用扁平数据重建树
-func (m *Tree[G]) UpdateList(list []*G) {
+// UpdateData 用树形数据重建树, 可传入一个或多个根节点
+// 重建时保留已有节点的展开状态和选中状态
+func (m *Tree[G]) UpdateData(children ...TreeChild[G]) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
+	expanded := map[string]bool{}
+	var collect func(nodes []*TreeNode[G])
+	collect = func(nodes []*TreeNode[G]) {
+		for _, n := range nodes {
+			expanded[n.path] = n.Expanded
+			collect(n.Children)
+		}
+	}
+	collect(m.roots)
+
 	m.roots = m.roots[:0]
-	m.rootIdx = map[string]*TreeNode[G]{}
 	m.selected = nil
 	m.clickNum = 0
-	m.dataSize = len(list)
+	m.dataSize = 0
 
-	for _, item := range list {
-		if item == nil {
-			continue
-		}
-		key := ""
-		if m.keyFunc != nil {
-			key = m.keyFunc(item)
-		}
-		segs := strings.Split(key, m.sep)
-		parent := (*TreeNode[G])(nil)
-		idx := m.rootIdx
-		siblings := &m.roots
-		for i, seg := range segs {
-			node, ok := idx[seg]
-			if !ok {
-				node = &TreeNode[G]{
-					Name:      seg,
-					Depth:     i,
-					Parent:    parent,
-					childIdx:  map[string]*TreeNode[G]{},
-					clickable: new(widget.Clickable),
-				}
-				idx[seg] = node
-				*siblings = append(*siblings, node)
-			}
-			if i == len(segs)-1 {
-				node.Data = item
-			}
-			parent = node
-			idx = node.childIdx
-			siblings = &node.Children
+	for i := range children {
+		if node := m.buildChild(&children[i], nil, 0, expanded); node != nil {
+			m.roots = append(m.roots, node)
 		}
 	}
 	m.rebuildFlat()
+
+	if m.selectedId != "" {
+		m.selected = m.findByPath(m.roots, m.selectedId)
+	}
+}
+
+// buildChild 由 TreeChild 递归构建 TreeNode
+func (m *Tree[G]) buildChild(c *TreeChild[G], parent *TreeNode[G], depth int, expanded map[string]bool) *TreeNode[G] {
+	if c == nil {
+		return nil
+	}
+	node := &TreeNode[G]{
+		Name:      c.Label,
+		Data:      c.Data,
+		Parent:    parent,
+		Depth:     depth,
+		clickable: new(widget.Clickable),
+	}
+	if parent == nil {
+		node.path = c.Label
+	} else {
+		node.path = parent.path + "\x1f" + c.Label
+	}
+	if c.Data != nil {
+		m.dataSize++
+	}
+	if len(c.Children) > 0 {
+		if v, ok := expanded[node.path]; ok {
+			node.Expanded = v
+		} else {
+			node.Expanded = depth == 0 //默认展开根节点
+		}
+		for _, child := range c.Children {
+			if n := m.buildChild(child, node, depth+1, expanded); n != nil {
+				node.Children = append(node.Children, n)
+			}
+		}
+	}
+	return node
+}
+
+// findByPath 按全路径查找节点
+func (m *Tree[G]) findByPath(nodes []*TreeNode[G], path string) *TreeNode[G] {
+	for _, n := range nodes {
+		if n.path == path {
+			return n
+		}
+		if found := m.findByPath(n.Children, path); found != nil {
+			return found
+		}
+	}
+	return nil
 }
 
 // rebuildFlat 按展开状态扁平化可见节点
@@ -219,6 +242,7 @@ func (m *Tree[G]) Layout(gtx C) D {
 				m.clickNum = 1
 			}
 			m.selected = node
+			m.selectedId = node.path
 			num := m.clickNum
 			if !node.IsLeaf() {
 				node.Expanded = !node.Expanded
