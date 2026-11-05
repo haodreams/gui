@@ -11,6 +11,7 @@ import (
 	"image/color"
 	"sync"
 
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -59,6 +60,9 @@ type TreeTextFunc[G any] func(node *TreeNode[G]) (text string, c *color.NRGBA)
 // TreeClickFunc 节点单击回调, num 为连续单击次数(双击为2)
 type TreeClickFunc[G any] func(gtx layout.Context, node *TreeNode[G], num int)
 
+// TreeRightClickFunc 节点右键回调, 返回 true 时弹出右键菜单
+type TreeRightClickFunc[G any] func(gtx layout.Context, node *TreeNode[G]) bool
+
 type Tree[G any] struct {
 	Widget[Tree[G]]
 	list widget.List
@@ -74,6 +78,12 @@ type Tree[G any] struct {
 	lock      sync.RWMutex
 	textFunc  TreeTextFunc[G]
 	clickFunc TreeClickFunc[G]
+	rightFunc TreeRightClickFunc[G]
+
+	menu      *Menu
+	menuOpen  bool
+	menuPos   image.Point
+	rowHeight int
 }
 
 // NewTree 创建树控件
@@ -89,6 +99,18 @@ func NewTree[G any](win *Window, textFunc TreeTextFunc[G]) *Tree[G] {
 // SetOnNodeClick 设置节点单击回调
 func (m *Tree[G]) SetOnNodeClick(f TreeClickFunc[G]) *Tree[G] {
 	m.clickFunc = f
+	return m
+}
+
+// SetOnNodeRightClick 设置节点右键回调
+func (m *Tree[G]) SetOnNodeRightClick(f TreeRightClickFunc[G]) *Tree[G] {
+	m.rightFunc = f
+	return m
+}
+
+// SetMenu 设置右键弹出菜单
+func (m *Tree[G]) SetMenu(menu *Menu) *Tree[G] {
+	m.menu = menu
 	return m
 }
 
@@ -200,6 +222,19 @@ func (m *Tree[G]) rebuildFlat() {
 	walk(m.roots)
 }
 
+// ExpandRoots 展开所有根目录
+func (m *Tree[G]) ExpandRoots() *Tree[G] {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	for _, n := range m.roots {
+		if len(n.Children) > 0 {
+			n.Expanded = true
+		}
+	}
+	m.rebuildFlat()
+	return m.t
+}
+
 // ExpandAll 展开/收起所有目录节点
 func (m *Tree[G]) ExpandAll(expanded bool) *Tree[G] {
 	m.lock.Lock()
@@ -238,7 +273,7 @@ func (m *Tree[G]) Layout(gtx C) D {
 	count := len(m.flat)
 	m.lock.Unlock()
 
-	return m.list.Layout(gtx, count, func(gtx C, index int) D {
+	list := m.list.Layout(gtx, count, func(gtx C, index int) D {
 		m.lock.RLock()
 		//数据可能被异步重新查询替换, 防止索引越界
 		if index >= len(m.flat) {
@@ -264,6 +299,7 @@ func (m *Tree[G]) Layout(gtx C) D {
 				node.Expanded = !node.Expanded
 				m.dirty = true
 			}
+			m.menuOpen = false
 			m.lock.Unlock()
 			m.win.Invalidate()
 			if m.clickFunc != nil {
@@ -271,10 +307,54 @@ func (m *Tree[G]) Layout(gtx C) D {
 			}
 		}
 
-		return material.Clickable(gtx, node.clickable, func(gtx C) D {
+		for {
+			evt, ok := gtx.Source.Event(pointer.Filter{
+				Target: node.clickable,
+				Kinds:  pointer.Press,
+			})
+			if !ok {
+				break
+			}
+			e, ok := evt.(pointer.Event)
+			if !ok {
+				continue
+			}
+			if e.Buttons != pointer.ButtonSecondary {
+				continue
+			}
+			//右键: 按回调返回决定是否弹出菜单
+			show := m.rightFunc != nil && m.rightFunc(gtx, node)
+			m.menuOpen = show && m.menu != nil
+			if m.menuOpen {
+				y := index*m.rowHeight - m.list.Position.Offset + int(e.Position.Y)
+				m.menuPos = image.Pt(int(e.Position.X), y)
+				m.win.Invalidate()
+			}
+		}
+
+		dims := material.Clickable(gtx, node.clickable, func(gtx C) D {
 			return m.layoutNode(gtx, th, node, isSelected)
 		})
+		m.rowHeight = dims.Size.Y
+		return dims
 	})
+
+	if !m.menuOpen || m.menu == nil {
+		return list
+	}
+	if m.menu.Clicked(gtx) {
+		m.menuOpen = false
+		m.win.Invalidate()
+	}
+	//菜单弹出层, 定位到右键位置
+	return layout.Stack{Alignment: layout.NW}.Layout(gtx,
+		layout.Stacked(func(gtx C) D { return list }),
+		layout.Stacked(func(gtx C) D {
+			trans := op.Offset(m.menuPos).Push(gtx.Ops)
+			defer trans.Pop()
+			return m.menu.Layout(gtx)
+		}),
+	)
 }
 
 func (m *Tree[G]) layoutNode(gtx C, th *material.Theme, node *TreeNode[G], selected bool) D {
