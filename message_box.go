@@ -43,6 +43,14 @@ var (
 	}
 )
 
+// Windows风格标题栏配色
+var (
+	dlgTitleBarBg   = color.NRGBA{R: 0xF3, G: 0xF3, B: 0xF3, A: 0xFF} //标题栏背景
+	dlgTitleFg      = color.NRGBA{R: 0x1F, G: 0x1F, B: 0x1F, A: 0xFF} //标题文字
+	dlgCloseHoverBg = color.NRGBA{R: 0xE8, G: 0x11, B: 0x23, A: 0xFF} //关闭按钮悬停背景(红)
+	dlgCloseHoverFg = color.NRGBA{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF} //关闭按钮悬停图标(白)
+)
+
 // Scrim implments a clickable translucent overlay. It can animate appearing
 // and disappearing as a fade-in, fade-out transition from zero opacity
 // to a fixed maximum opacity.
@@ -77,9 +85,10 @@ type MessageBox struct {
 	rememberBool *widget.Bool //是否记住选择
 	options      []MBOption
 	result       string
-	refreshCount  byte
+	refreshCount byte
 	onSubmit     func(selectedOption string, remember bool) //确定后的回调函数
 	content      Contenter
+	closeBtn     widget.Clickable //标题栏X关闭按钮
 
 	Scrim //遮罩层，防止鼠标穿透
 }
@@ -227,7 +236,7 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 func (m *MessageBox) layout(gtx layout.Context) D {
 	border := widget.Border{
 		Color:        Border,
-		Width:        2,
+		Width:        1,
 		CornerRadius: 2,
 	}
 	return border.Layout(gtx, func(gtx layout.Context) D {
@@ -237,98 +246,145 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 				paint.Fill(gtx.Ops, dlgBgs[m.Type])
 				return D{Size: gtx.Constraints.Min}
 			}, func(gtx layout.Context) D {
-				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(m.layoutTitleBar),
+					layout.Rigid(m.layoutBody),
+				)
+			},
+		)
+	})
+}
+
+// layoutTitleBar 绘制Windows风格标题栏: 左侧标题, 右侧X关闭按钮(悬停变红)
+func (m *MessageBox) layoutTitleBar(gtx layout.Context) D {
+	if m.closeBtn.Clicked(gtx) {
+		m.Hide()
+	}
+	return layout.Background{}.Layout(gtx,
+		func(gtx C) D { //标题栏背景
+			paint.FillShape(gtx.Ops, dlgTitleBarBg, clip.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Op())
+			return D{Size: gtx.Constraints.Min}
+		},
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return layout.Inset{Left: unit.Dp(10), Top: unit.Dp(6), Bottom: unit.Dp(6)}.Layout(gtx, func(gtx C) D {
+						h := material.Body1(m.Theme(), m.Title)
+						h.Color = dlgTitleFg
+						h.MaxLines = 1
+						return h.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D { //X关闭按钮
+					size := gtx.Dp(32)
+					gtx.Constraints.Min = image.Pt(size, size)
+					gtx.Constraints.Max = gtx.Constraints.Min
+					hovered := m.closeBtn.Hovered()
+					if hovered { //悬停画红色背景
+						paint.FillShape(gtx.Ops, dlgCloseHoverBg, clip.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Op())
+					}
+					return m.closeBtn.Layout(gtx, func(gtx C) D {
+						iconColor := dlgTitleFg
+						if hovered {
+							iconColor = dlgCloseHoverFg
+						}
+						//Center必须在完整按钮区内居中, 约束缩小只能作用于图标本身
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							s := gtx.Dp(16)
+							gtx.Constraints.Min = image.Pt(s, s)
+							gtx.Constraints.Max = gtx.Constraints.Min
+							return CloseIcon.Layout(gtx, iconColor)
+						})
+					})
+				}),
+			)
+		},
+	)
+}
+
+// layoutBody 绘制消息正文与操作按钮
+func (m *MessageBox) layoutBody(gtx layout.Context) D {
+	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) D {
+		return layout.Flex{
+			Axis:      layout.Vertical,
+			Alignment: layout.Middle,
+		}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) D {
+				return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) D {
+					var d D
+					dp := gtx.Dp(142) //预留标题栏+按钮区+边距的高度
+					if m.content != nil {
+						//替换为自定义容器
+						d = m.content.Layout(gtx)
+						if m.win.height-d.Size.Y < dp {
+							d.Size.Y = m.win.height - dp
+						}
+					} else {
+						b := material.Body1(m.Theme(), m.Message)
+						b.Color = dlgTextColor[m.Type]
+						d = b.Layout(gtx)
+					}
+					m.Height = unit.Dp(d.Size.Y + dp)
+					if m.refreshCount < 3 { //动态刷新
+						// m.win.Log(m.MaxHeight)
+						m.refreshCount++
+						gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Millisecond * 300)})
+					}
+					return d
+				})
+			}),
+
+			layout.Rigid(func(gtx layout.Context) D {
+				ops := m.options
+				count := len(ops)
+				if m.rememberBool != nil {
+					count++
+				}
+
+				items := make([]layout.FlexChild, 0, count)
+				if m.rememberBool != nil {
+					items = append(
+						items,
+						layout.Rigid(func(gtx layout.Context) D {
+							return material.CheckBox(m.Theme(), m.rememberBool, "Don't ask again").Layout(gtx)
+						}),
+						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
+					)
+				}
+
+				for i := range ops {
+					if ops[i].Button.Clicked(gtx) {
+						m.result = ops[i].Text
+						m.submit()
+					}
+
+					items = append(
+						items,
+						layout.Rigid(func(gtx layout.Context) D {
+							height := gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 + 10
+							gtx.Constraints.Max.Y = gtx.Dp(height)
+							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+							btn := material.Button(m.Theme(), &ops[i].Button, ops[i].Text)
+							btn.Inset = layout.Inset{
+								Top: 5, Bottom: 5,
+								Left: 12, Right: 12,
+							}
+							return btn.Layout(gtx)
+							//return material.Button(p.Theme(), &p.options[i].Button, p.options[i].Text).Layout(gtx)
+						}),
+						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
+					)
+				}
+				return layout.Inset{Top: unit.Dp(5)}.Layout(gtx, func(gtx layout.Context) D {
 					return layout.Flex{
-						Axis:      layout.Vertical,
+						Axis:      layout.Horizontal,
 						Alignment: layout.Middle,
+						Spacing:   layout.SpaceStart,
 					}.Layout(gtx,
-						layout.Rigid(func(gtx layout.Context) D {
-							return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) D {
-								h := material.H6(m.Theme(), m.Title)
-								h.Color = dlgTextColor[m.Type]
-								return h.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx layout.Context) D {
-							return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) D {
-								var d D
-								dp := gtx.Dp(110)
-								if m.content != nil {
-									//替换为自定义容器
-									d = m.content.Layout(gtx)
-									if m.win.height-d.Size.Y < dp {
-										d.Size.Y = m.win.height - dp
-									}
-								} else {
-									b := material.Body1(m.Theme(), m.Message)
-									b.Color = dlgTextColor[m.Type]
-									d = b.Layout(gtx)
-								}
-								m.Height = unit.Dp( d.Size.Y + dp)
-								if m.refreshCount < 3 { //动态刷新
-									// m.win.Log(m.MaxHeight)
-									m.refreshCount ++
-									gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Millisecond* 300)})
-								}
-								return d
-							})
-						}),
-
-						layout.Rigid(func(gtx layout.Context) D {
-							ops := m.options
-							count := len(ops)
-							if m.rememberBool != nil {
-								count++
-							}
-
-							items := make([]layout.FlexChild, 0, count)
-							if m.rememberBool != nil {
-								items = append(
-									items,
-									layout.Rigid(func(gtx layout.Context) D {
-										return material.CheckBox(m.Theme(), m.rememberBool, "Don't ask again").Layout(gtx)
-									}),
-									layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
-								)
-							}
-
-							for i := range ops {
-								if ops[i].Button.Clicked(gtx) {
-									m.result = ops[i].Text
-									m.submit()
-								}
-
-								items = append(
-									items,
-									layout.Rigid(func(gtx layout.Context) D {
-										height:= gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 +10
-										gtx.Constraints.Max.Y = gtx.Dp(height)
-										gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-										btn := material.Button(m.Theme(), &ops[i].Button, ops[i].Text)
-										btn.Inset = layout.Inset{
-											Top: 5, Bottom: 5,
-											Left: 12, Right: 12,
-										}
-										return btn.Layout(gtx)
-										//return material.Button(p.Theme(), &p.options[i].Button, p.options[i].Text).Layout(gtx)
-									}),
-									layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
-								)
-							}
-							return layout.Inset{Top: unit.Dp(5)}.Layout(gtx, func(gtx layout.Context) D {
-								return layout.Flex{
-									Axis:      layout.Horizontal,
-									Alignment: layout.Middle,
-									Spacing:   layout.SpaceStart,
-								}.Layout(gtx,
-									items...,
-								)
-							})
-						}),
+						items...,
 					)
 				})
-
-			},
+			}),
 		)
 	})
 }
