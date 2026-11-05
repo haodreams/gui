@@ -68,7 +68,8 @@ type Tree[G any] struct {
 	selected   *TreeNode[G]
 	selectedId string
 	clickNum   int
-	dataSize   int //叶子(数据)节点总数
+	dataSize   int  //叶子(数据)节点总数
+	dirty      bool //展开状态已变化, 需要在下一帧重建可见节点
 
 	lock      sync.RWMutex
 	textFunc  TreeTextFunc[G]
@@ -229,9 +230,25 @@ func (m *Tree[G]) text(node *TreeNode[G]) (string, *color.NRGBA) {
 func (m *Tree[G]) Layout(gtx C) D {
 	m.CheckDimensions(&gtx)
 	th := m.Theme()
-	return m.list.Layout(gtx, len(m.flat), func(gtx C, index int) D {
+
+	// 展开状态在上一帧已变化, 这里重建可见节点
+	m.lock.Lock()
+	if m.dirty {
+		m.rebuildFlat()
+		m.dirty = false
+	}
+	count := len(m.flat)
+	m.lock.Unlock()
+
+	return m.list.Layout(gtx, count, func(gtx C, index int) D {
 		m.lock.RLock()
+		//数据可能被异步重新查询替换, 防止索引越界
+		if index >= len(m.flat) {
+			m.lock.RUnlock()
+			return D{}
+		}
 		node := m.flat[index]
+		isSelected := m.selected == node
 		m.lock.RUnlock()
 
 		if node.clickable.Clicked(gtx) {
@@ -245,22 +262,24 @@ func (m *Tree[G]) Layout(gtx C) D {
 			m.selectedId = node.path
 			num := m.clickNum
 			if !node.IsLeaf() {
+				//不能在布局过程中改变可见节点数量, 留到下一帧重建
 				node.Expanded = !node.Expanded
-				m.rebuildFlat()
+				m.dirty = true
 			}
 			m.lock.Unlock()
+			m.win.Invalidate()
 			if m.clickFunc != nil {
 				m.clickFunc(gtx, node, num)
 			}
 		}
 
 		return material.Clickable(gtx, node.clickable, func(gtx C) D {
-			return m.layoutNode(gtx, th, node)
+			return m.layoutNode(gtx, th, node, isSelected)
 		})
 	})
 }
 
-func (m *Tree[G]) layoutNode(gtx C, th *material.Theme, node *TreeNode[G]) D {
+func (m *Tree[G]) layoutNode(gtx C, th *material.Theme, node *TreeNode[G], selected bool) D {
 	row := func(gtx C) D {
 		return layout.Inset{
 			Left:   unit.Dp(float32(node.Depth)*18 + 4),
@@ -299,7 +318,7 @@ func (m *Tree[G]) layoutNode(gtx C, th *material.Theme, node *TreeNode[G]) D {
 		})
 	}
 
-	if m.selected == node {
+	if selected {
 		macro := op.Record(gtx.Ops)
 		dims := row(gtx)
 		call := macro.Stop()
