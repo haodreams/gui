@@ -9,6 +9,7 @@
 package gui
 
 import (
+	"image"
 	"image/color"
 
 	"gioui.org/layout"
@@ -21,11 +22,13 @@ type Edit struct {
 	Widget[Edit]
 	hint string
 	widget.Editor
-	blur     func(string) //失去光标的回调函数
-	focused  bool         //当前是否有焦点，判断失去焦点的条件
-	textSize unit.Sp //字体大小
-	color *color.NRGBA //字体颜色
-	onSubmit func(string)
+	blur      func(string) //失去光标的回调函数
+	focused   bool         //当前是否有焦点，判断失去焦点的条件
+	textSize  unit.Sp      //字体大小
+	color     *color.NRGBA //字体颜色
+	onSubmit  func(string)
+	clearable bool          //是否显示清空按钮
+	btnClear  widget.Clickable //清空按钮
 }
 
 func NewEdit(win *Window, hint string) *Edit {
@@ -34,6 +37,12 @@ func NewEdit(win *Window, hint string) *Edit {
 	m.Inset = win.EditInset
 	m.SingleLine = true
 	m.hint = hint
+	return m
+}
+
+// SetClearButton 设置是否显示清空按钮(X), 有内容时点击清空输入框
+func (m *Edit) SetClearButton(clearable bool) *Edit {
+	m.clearable = clearable
 	return m
 }
 
@@ -116,8 +125,34 @@ func (m *Edit) Layout(gtx layout.Context) layout.Dimensions {
 			es.TextSize = m.textSize
 		}
 		if m.color != nil {
-			es.Color = *m.color	
+			es.Color = *m.color
 		}
-		return m.Inset.Layout(gtx, es.Layout)
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return m.Inset.Layout(gtx, es.Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return m.layoutClear(gtx)
+			}),
+		)
+	})
+}
+
+// layoutClear 绘制清空按钮, 输入框有内容且开启了清空按钮时显示
+func (m *Edit) layoutClear(gtx C) D {
+	if !m.clearable || m.Editor.Text() == "" {
+		return D{}
+	}
+	if m.btnClear.Clicked(gtx) {
+		m.Editor.SetText("")
+		m.Windos().Invalidate()
+	}
+	size := gtx.Dp(unit.Dp(18))
+	gtx.Constraints.Min = image.Pt(size, size)
+	gtx.Constraints.Max = image.Pt(size, size)
+	return material.Clickable(gtx, &m.btnClear, func(gtx C) D {
+		gtx.Constraints.Min = image.Pt(size, size)
+		gtx.Constraints.Max = image.Pt(size, size)
+		return CloseIcon.Layout(gtx, m.Theme().Fg)
 	})
 }
