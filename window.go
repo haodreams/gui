@@ -219,7 +219,7 @@ func (m *Window) MsgBox(title string, contant string, mode ModelType, cb func(se
 // 输入对话框
 func (m *Window) Prompt(title string, message string, f func(text string)) *MessageBox {
 	m.dlg.Title = title
-	edit := NewEdit(m, message).SetWidth(int(m.dlg.Width - 20))
+	edit := NewEdit(m, message).SetWidth(int(m.dlg.Width - 20)).SetClearButton(true)
 	edit.SetOnSubmit(f)
 	m.dlg.content = edit
 	m.dlg.Type = ModalInfo
