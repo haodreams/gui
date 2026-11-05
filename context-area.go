@@ -43,6 +43,8 @@ type ContextArea struct {
 	// position the contextual widget without it overflowing the edge of
 	// the window.
 	PositionHint layout.Direction
+	// NoDismissOnRelease 为 true 时, 上下文内部的释放事件不会关闭上下文, 由使用者自行控制关闭
+	NoDismissOnRelease bool
 }
 
 // Update performs event processing for the context area but does not lay it out.
@@ -119,7 +121,7 @@ func (r *ContextArea) Update(gtx C) {
 		if !ok {
 			continue
 		}
-		if e.Kind == pointer.Release {
+		if e.Kind == pointer.Release && !r.NoDismissOnRelease {
 			r.Dismiss()
 		}
 	}

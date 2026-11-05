@@ -3,6 +3,7 @@ package gui
 import (
 	"image"
 	"image/color"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -41,6 +42,11 @@ type Select struct {
 	onValueChange func(value string)
 
 	icon *widget.Icon
+
+	searchable bool    //选项列表是否可搜索
+	searchText string  //当前搜索关键字
+	editSearch *Edit   //搜索输入框
+	wasOpen    bool    //上一帧菜单是否展开
 }
 
 func NewSelect(win *Window, options ...*SelectOption) *Select {
@@ -154,6 +160,18 @@ func (c *Select) SetOnChanged(f func(value string)) *Select {
 	return c
 }
 
+// SetSearchable 设置选项列表是否可搜索, 开启后下拉列表顶部显示搜索框, 按选项文本过滤
+func (c *Select) SetSearchable(searchable bool) *Select {
+	c.searchable = searchable
+	if searchable && c.editSearch == nil {
+		c.editSearch = NewEdit(c.win, "搜索选项").SetClearButton(true).SetWidth(200)
+	}
+	//有输入框时不能因内部释放事件自动关闭菜单
+	c.menuContextArea.NoDismissOnRelease = searchable
+	c.menuInit = true
+	return c
+}
+
 func (c *Select) SetSelectedByTitle(title string) {
 	if len(c.options) == 0 {
 		return
@@ -252,6 +270,25 @@ func (c *Select) Layout(gtx layout.Context) D {
 		for opt.clickable.Clicked(gtx) {
 			c.isOpen = false
 			c.selectedOptionIndex = i
+			c.menuContextArea.Dismiss()
+		}
+	}
+
+	//菜单关闭后清空搜索条件
+	if c.isOpen != c.wasOpen {
+		if c.wasOpen && !c.isOpen && c.editSearch != nil {
+			c.editSearch.SetText("")
+			c.searchText = ""
+			c.menuInit = true
+		}
+		c.wasOpen = c.isOpen
+	}
+
+	//搜索关键字变化时重建菜单项
+	if c.searchable && c.editSearch != nil {
+		if text := strings.TrimSpace(c.editSearch.Text()); text != c.searchText {
+			c.searchText = text
+			c.menuInit = true
 		}
 	}
 
@@ -303,8 +340,26 @@ func (c *Select) Layout(gtx layout.Context) D {
 // updateMenuItems creates or updates menu items based on options and calculates minWidth.
 func (c *Select) updateMenuItems(theme *material.Theme) {
 	c.menu.Options = c.menu.Options[:0]
+
+	//顶部搜索框
+	if c.searchable && c.editSearch != nil {
+		edit := c.editSearch
+		c.menu.Options = append(c.menu.Options, func(gtx layout.Context) D {
+			return layout.Inset{Left: unit.Dp(4), Right: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx, edit.Layout)
+		})
+	}
+
+	filter := strings.ToLower(c.searchText)
+	count := 0
 	for _, opt := range c.options {
 		opt := opt
+		if filter != "" {
+			if opt.isDivider || !strings.Contains(strings.ToLower(opt.Text), filter) {
+				continue
+			}
+		}
+
+		count++
 		c.menu.Options = append(c.menu.Options, func(gtx layout.Context) D {
 			if opt.isDivider {
 				dv := component.Divider(theme)
@@ -320,6 +375,15 @@ func (c *Select) updateMenuItems(theme *material.Theme) {
 
 			itm.Label.Color = theme.Palette.Fg
 			return itm.Layout(gtx)
+		})
+	}
+
+	//无匹配项提示
+	if filter != "" && count == 0 {
+		c.menu.Options = append(c.menu.Options, func(gtx layout.Context) D {
+			return layout.Inset{Left: unit.Dp(12), Right: unit.Dp(12), Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) D {
+				return material.Label(theme, theme.TextSize, "无匹配项").Layout(gtx)
+			})
 		})
 	}
 }
