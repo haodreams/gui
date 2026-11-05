@@ -32,7 +32,7 @@ func Init() *gui.Window {
 
 	header.AddWidget(gui.NewLabel(win, "Hello:"))
 
-	header.AddWidget(gui.NewEdit(win, "").SetWidth(100))
+	header.AddWidget(gui.NewEdit(win, "").SetWidth(100).SetClearButton(true))
 	header.AddWidget(gui.NewEdit(win, "test2").SetWidth(120))
 	header.Add(gui.NewSpace(8))
 

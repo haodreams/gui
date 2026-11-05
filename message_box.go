@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"time"
 
+	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -29,17 +30,23 @@ const (
 	IconPositionEnd   = 1
 )
 
-// 对话框语义配色(参考 Ant Design 5 色板): 浅色背景 + 同色系数值主色文字
+// 对话框配色(参考 Windows 风格): 白色背景 + 深色文字
 var (
 	dlgBgs = []color.NRGBA{
-		{R: 0xE6, G: 0xF4, B: 0xFF, A: 0xFF}, //info  #E6F4FF 浅蓝
-		{R: 0xFF, G: 0xF7, B: 0xE6, A: 0xFF}, //warn  #FFF7E6 浅橙
-		{R: 0xFF, G: 0xF1, B: 0xF0, A: 0xFF}, //error #FFF1F0 浅红
+		{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF}, //info  白
+		{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF}, //warn  白
+		{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF}, //error 白
 	}
 	dlgTextColor = []color.NRGBA{
-		{R: 0x16, G: 0x77, B: 0xFF, A: 0xFF}, //info  #1677FF
-		{R: 0xFA, G: 0x8C, B: 0x16, A: 0xFF}, //warn  #FA8C16
-		{R: 0xFF, G: 0x4D, B: 0x4F, A: 0xFF}, //error #FF4D4F
+		{R: 0x1F, G: 0x1F, B: 0x1F, A: 0xFF}, //info  深灰
+		{R: 0x1F, G: 0x1F, B: 0x1F, A: 0xFF}, //warn  深灰
+		{R: 0x1F, G: 0x1F, B: 0x1F, A: 0xFF}, //error 深灰
+	}
+	//对话框图标底色(参考 Windows): info蓝 / warn黄 / error红
+	dlgIconBgs = []color.NRGBA{
+		{R: 0x00, G: 0x78, B: 0xD7, A: 0xFF}, //info  #0078D7 蓝
+		{R: 0xFF, G: 0xC7, B: 0x00, A: 0xFF}, //warn  #FFC700 黄
+		{R: 0xE8, G: 0x11, B: 0x23, A: 0xFF}, //error #E81123 红
 	}
 )
 
@@ -302,6 +309,49 @@ func (m *MessageBox) layoutTitleBar(gtx layout.Context) D {
 	)
 }
 
+// layoutDialogIcon 绘制Windows风格对话框图标(32dp): info蓝圈i / warn黄三角! / error红圈×
+func layoutDialogIcon(gtx C, tp ModelType) D {
+	size := gtx.Dp(32)
+	s := float32(size)
+	sz := image.Rectangle{Max: image.Pt(size, size)}
+	white := color.NRGBA{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF}
+	stroke := int(s * 0.125) //符号笔画宽度
+
+	//fillRect 在offset处填充一个矩形
+	fillRect := func(offset image.Point, wh image.Point, c color.NRGBA) {
+		defer op.Offset(offset).Push(gtx.Ops).Pop()
+		paint.FillShape(gtx.Ops, c, clip.Rect(image.Rectangle{Max: wh}).Op())
+	}
+
+	switch tp {
+	case ModalWarn: //黄三角 + 黑!
+		var p clip.Path
+		p.Begin(gtx.Ops)
+		p.MoveTo(f32.Pt(s/2, s*0.06))
+		p.LineTo(f32.Pt(s*0.97, s*0.9))
+		p.LineTo(f32.Pt(s*0.03, s*0.9))
+		p.Close()
+		paint.FillShape(gtx.Ops, dlgIconBgs[tp], clip.Outline{Path: p.End()}.Op())
+		dark := color.NRGBA{A: 0xFF}
+		fillRect(image.Pt(size/2-stroke/2, int(s*0.36)), image.Pt(stroke, int(s*0.32)), dark) //竖线
+		fillRect(image.Pt(size/2-stroke/2, int(s*0.74)), image.Pt(stroke, stroke), dark)      //点
+	case ModalError: //红圈 + 白×
+		paint.FillShape(gtx.Ops, dlgIconBgs[tp], clip.Ellipse(sz).Op(gtx.Ops))
+		var p clip.Path
+		p.Begin(gtx.Ops)
+		p.MoveTo(f32.Pt(s*0.3, s*0.3))
+		p.LineTo(f32.Pt(s*0.7, s*0.7))
+		p.MoveTo(f32.Pt(s*0.7, s*0.3))
+		p.LineTo(f32.Pt(s*0.3, s*0.7))
+		paint.FillShape(gtx.Ops, white, clip.Stroke{Path: p.End(), Width: float32(stroke)}.Op())
+	default: //ModalInfo 蓝圈 + 白i
+		paint.FillShape(gtx.Ops, dlgIconBgs[tp], clip.Ellipse(sz).Op(gtx.Ops))
+		fillRect(image.Pt(size/2-stroke/2, int(s*0.22)), image.Pt(stroke, stroke), white)     //点
+		fillRect(image.Pt(size/2-stroke/2, int(s*0.4)), image.Pt(stroke, int(s*0.38)), white) //竖线
+	}
+	return D{Size: image.Pt(size, size)}
+}
+
 // layoutBody 绘制消息正文与操作按钮
 func (m *MessageBox) layoutBody(gtx layout.Context) D {
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) D {
@@ -320,9 +370,17 @@ func (m *MessageBox) layoutBody(gtx layout.Context) D {
 							d.Size.Y = m.win.height - dp
 						}
 					} else {
-						b := material.Body1(m.Theme(), m.Message)
-						b.Color = dlgTextColor[m.Type]
-						d = b.Layout(gtx)
+						d = layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D { //类型图标
+								return layoutDialogIcon(gtx, m.Type)
+							}),
+							layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
+							layout.Flexed(1, func(gtx C) D {
+								b := material.Body1(m.Theme(), m.Message)
+								b.Color = dlgTextColor[m.Type]
+								return b.Layout(gtx)
+							}),
+						)
 					}
 					m.Height = unit.Dp(d.Size.Y + dp)
 					if m.refreshCount < 3 { //动态刷新

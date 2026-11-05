@@ -19,32 +19,38 @@ type Container struct {
 	childrens []layout.FlexChild
 }
 
+// NewContainer 创建一个容器
 func NewContainer(win *Window) *Container {
 	m := new(Container)
 	m.Init(win, m)
 	return m
 }
 
+// SetTitle 设置标题
 func (m *Container) SetTitle(title string) *Container {
 	m.Title = title
 	return m
 }
 
+// SetAlignment 设置对齐方式
 func (m *Container) SetAlignment(align layout.Alignment) *Container {
 	m.Flex.Alignment = align
 	return m
 }
 
+// SetSpacing 设置间距
 func (m *Container) SetSpacing(spacing layout.Spacing) *Container {
 	m.Flex.Spacing = spacing
 	return m
 }
 
+// SetHorizontal 设置为水平布局
 func (m *Container) SetHorizontal() *Container {
 	m.Flex.Axis = layout.Horizontal
 	return m
 }
 
+// SetVertical 设置为垂直布局
 func (m *Container) SetVertical() *Container {
 	m.Flex.Axis = layout.Vertical
 	return m
@@ -55,16 +61,19 @@ func (m *Container) SetAxis(axis layout.Axis) *Container {
 	return m
 }
 
+// Layout 布局
 func (m *Container) Layout(gtx layout.Context) layout.Dimensions {
 	m.CheckDimensions(&gtx)
 	return m.Flex.Layout(gtx, m.childrens...)
 }
 
+// Add 添加子组件
 func (m *Container) Add(child layout.FlexChild) *Container {
 	m.childrens = append(m.childrens, child)
 	return m
 }
 
+// AddWidget 添加子组件，可指定权重
 func (m *Container) AddWidget(widget Contenter, weight ...float32) *Container {
 	var child layout.FlexChild
 	if len(weight) > 0 {

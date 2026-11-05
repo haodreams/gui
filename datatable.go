@@ -165,10 +165,16 @@ func (m *DataTable[G]) GetItemTextColor(r any, row int, col int) (text string, c
 	return m.colorFunc(record, row, col)
 }
 
+// ResetFind 重置查找
+// 重置查找结果
 func (m *DataTable[G]) ResetFind() {
 	m.list = m.root
 }
 
+// Find 查找
+// text 查找的字符串
+// colIdx 查找的列索引
+// 返回查找结果
 func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
@@ -201,6 +207,12 @@ func (m *DataTable[G]) Find(text string, colIdx int) (err error) {
 	return nil
 }
 
+// GetRowCSV 获取行的CSV字符串
+// record 行的记录
+// row 行的索引
+// buf 输出缓冲区
+// encodef 编码函数
+// 返回CSV字符串
 func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...func(string) string) {
 	var encode func(string) string = nil
 	if len(encodef) > 0 {
@@ -219,6 +231,11 @@ func (m *DataTable[G]) GetRowCSV(record any, row int, buf io.Writer, encodef ...
 	}
 }
 
+// MakeColumns 创建列
+// list 列的记录
+// mapColumn 列的映射
+// 返回列
+// 返回回调函数
 func MakeColumns(list any, mapColumn map[string]*Column) (cols []*Column, f ItemTextColor) {
 	key := map[string][]int{}
 	t := reflect.TypeOf(list)

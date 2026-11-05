@@ -17,12 +17,17 @@ type Menu struct {
 	component.MenuState
 }
 
+// NewMenu 创建一个菜单
 func NewMenu(win *Window) *Menu {
 	m := new(Menu)
 	m.win = win
 	return m
 }
 
+// AddItem 添加菜单项
+// label 菜单项的标签
+// icon 菜单项的图标
+// action 菜单项点击时的回调函数
 func (m *Menu) AddItem(label string, icon *widget.Icon, action func()) {
 	item := &MenuItem{Label: label, Icon: icon, Action: action}
 	it := component.MenuItem(m.win.Theme(), &item.Clickable, label)

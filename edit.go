@@ -27,7 +27,7 @@ type Edit struct {
 	textSize  unit.Sp      //字体大小
 	color     *color.NRGBA //字体颜色
 	onSubmit  func(string)
-	clearable bool          //是否显示清空按钮
+	clearable bool             //是否显示清空按钮
 	btnClear  widget.Clickable //清空按钮
 }
 
@@ -46,42 +46,57 @@ func (m *Edit) SetClearButton(clearable bool) *Edit {
 	return m
 }
 
+// SetBlur 设置失去光标的回调函数
+// f 失去光标的回调函数，参数为当前输入框的文本
 func (m *Edit) SetBlur(f func(string)) *Edit {
 	m.blur = f
 	return m
 }
 
+// SetMask 设置输入框的掩码字符
+// mask 掩码字符，用于限制输入框的输入内容
 func (m *Edit) SetMask(mask rune) *Edit {
 	m.Mask = mask
 	return m
 }
 
-func (m *Edit)SetColor(c *color.NRGBA) *Edit {
+// SetColor 设置字体颜色
+// c 字体颜色
+func (m *Edit) SetColor(c *color.NRGBA) *Edit {
 	m.color = c
 	return m
 }
 
-func (m *Edit)SetTextSize(size unit.Sp) *Edit {
+// SetTextSize 设置字体大小
+// size 字体大小
+func (m *Edit) SetTextSize(size unit.Sp) *Edit {
 	m.textSize = size
-	return m	
+	return m
 }
 
+// SetOnSubmit 设置提交回调函数
+// f 提交回调函数，参数为当前输入框的文本
 func (m *Edit) SetOnSubmit(f func(string)) *Edit {
 	m.Submit = true
 	m.onSubmit = f
 	return m
 }
 
+// SetText 设置输入框的文本
+// text 输入框的文本
 func (m *Edit) SetText(text string) *Edit {
 	m.Editor.SetText(text)
 	return m
 }
 
+// SetSigleLine 设置是否单行输入
+// singleLine 是否单行输入
 func (m *Edit) SetSigleLine(singleLine bool) *Edit {
 	m.SingleLine = singleLine
 	return m
 }
 
+// Layout 绘制输入框
 func (m *Edit) Layout(gtx layout.Context) layout.Dimensions {
 	if m.blur != nil {
 		if gtx.Source.Focused(&m.Editor) {

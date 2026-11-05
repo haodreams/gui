@@ -100,34 +100,48 @@ func TimeStampFormat(t int64) string {
 	return time.Unix(t, 0).Format("01月02日")
 }
 
+// ID 获取卡片的识别字段
+// 返回卡片的识别字段
 func (m *Card) ID() int {
 	return m.id
 }
 
+// Show 显示卡片
+// 返回卡片
 func (m *Card) Show() *Card {
 	m.hide = false
 	return m
 }
 
+// Hide 隐藏卡片
+// 返回卡片
 func (m *Card) Hide() *Card {
 	m.hide = true
 	return m
 }
 
-func (m *Card)IsHide()bool{
+// IsHide 是否隐藏
+// 返回是否隐藏
+func (m *Card) IsHide() bool {
 	return m.hide
 }
 
+// SetOnClick 设置点击回调函数
+// onClick 点击回调函数，参数为当前卡片
 func (m *Card) SetOnClick(onClick func(card *Card)) *Card {
 	m.onClick = onClick
 	return m
 }
 
+// SetLevel 设置卡片的级别
+// level 卡片的级别
 func (m *Card) SetLevel(level string) *Card {
 	m.level = level
 	return m
 }
 
+// SetImage 设置卡片的图标
+// img 卡片的图标
 func (m *Card) SetImage(img image.Image) *Card {
 	if m.img != nil {
 		m.img.SetImage(img)
@@ -138,15 +152,21 @@ func (m *Card) SetImage(img image.Image) *Card {
 	return m
 }
 
+// GetImage 获取卡片的图标
+// 返回卡片的图标
 func (m *Card) GetImage() *Image {
 	return m.img
 }
 
+// SetTitle 设置卡片的标题
+// title 卡片的标题
 func (m *Card) SetTitle(title string) *Card {
 	m.title.Text = title
 	return m
 }
 
+// SetTimeFormat 设置时间戳格式化函数
+// format 时间戳格式化函数，参数为时间戳，返回时间字符串
 func (m *Card) SetTimeFormat(format func(int64) string) *Card {
 	if format == nil { //如果为空，使用默认的时间戳格式化函数
 		m.tsFormat = TimeStampFormat
@@ -155,33 +175,47 @@ func (m *Card) SetTimeFormat(format func(int64) string) *Card {
 	return m
 }
 
+// SetTime 设置卡片的时间戳
+// time 卡片的时间戳
 func (m *Card) SetTime(time int64) *Card {
 	m.timeStamp = time
 	return m
 }
 
+// SetStringTime 设置卡片的时间戳为字符串
+// time 时间戳字符串
 func (m *Card) SetStringTime(time string) *Card {
 	m.time.Text = time
 	return m
 }
 
+// SetMsg 设置卡片的消息
+// msg 卡片的消息
 func (m *Card) SetMsg(msg string) *Card {
 	m.msg.Text = msg
 	return m
 }
 
+// Time 获取卡片的时间戳
+// 返回卡片的时间戳
 func (m *Card) Time() int64 {
 	return m.timeStamp
 }
 
+// Title 获取卡片的标题
+// 返回卡片的标题
 func (m *Card) Title() string {
 	return m.title.Text
 }
 
+// Msg 获取卡片的消息
+// 返回卡片的消息
 func (m *Card) Msg() string {
 	return m.msg.Text
 }
 
+// Layout 布局卡片
+// 返回卡片的布局
 func (m *Card) Layout(gtx C) D {
 	if m.hide {
 		return D{}
@@ -201,8 +235,8 @@ func (m *Card) Layout(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					d := m.img.Layout(gtx)
 					if m.UnRead {
-						x:= gtx.Dp(12)
-						y:= gtx.Dp(12)
+						x := gtx.Dp(12)
+						y := gtx.Dp(12)
 						c := color.NRGBA{R: 255, G: 0, B: 0, A: 255}
 						paint.FillShape(gtx.Ops, c, clip.Ellipse{Min: image.Point{d.Size.X - x, 0}, Max: image.Point{d.Size.X, y}}.Op(gtx.Ops))
 						//todo 输出文字
