@@ -164,7 +164,8 @@ func (c *Select) SetOnChanged(f func(value string)) *Select {
 func (c *Select) SetSearchable(searchable bool) *Select {
 	c.searchable = searchable
 	if searchable && c.editSearch == nil {
-		c.editSearch = NewEdit(c.win, "搜索选项").SetClearButton(true).SetWidth(200)
+		//不设置固定宽度, 由弹出面板宽度自适应
+		c.editSearch = NewEdit(c.win, "搜索选项").SetClearButton(true)
 	}
 	//有输入框时不能因内部释放事件自动关闭菜单
 	c.menuContextArea.NoDismissOnRelease = searchable
