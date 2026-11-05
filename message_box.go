@@ -228,6 +228,9 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 		}
 	}
 	d2 := offset.Layout(gtx, func(gtx C) D {
+		//window.go的Stack.Expanded会把约束Min撑满整个窗口, 这里重置Min:
+		//高度按内容自适应, 宽度仍保持Width(窗口不足时铺满)
+		gtx.Constraints.Min = image.Point{X: min(maxWidth, gtx.Constraints.Max.X)}
 		return m.layout(gtx)
 	})
 	return layout.Stack{}.Layout(gtx,
@@ -243,8 +246,8 @@ func (m *MessageBox) Layout(gtx layout.Context) D {
 func (m *MessageBox) layout(gtx layout.Context) D {
 	border := widget.Border{
 		Color:        Border,
-		Width:        1,
-		CornerRadius: 2,
+		Width:        0,
+		CornerRadius: 3, //Windows风格圆角
 	}
 	return border.Layout(gtx, func(gtx layout.Context) D {
 		return layout.Background{}.Layout(gtx,
@@ -266,10 +269,13 @@ func (m *MessageBox) layout(gtx layout.Context) D {
 func (m *MessageBox) layoutTitleBar(gtx layout.Context) D {
 	if m.closeBtn.Clicked(gtx) {
 		m.Hide()
+		//设置页面需要刷新
+		gtx.Execute(op.InvalidateCmd{})
 	}
 	return layout.Background{}.Layout(gtx,
-		func(gtx C) D { //标题栏背景
-			paint.FillShape(gtx.Ops, dlgTitleBarBg, clip.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Op())
+		func(gtx C) D { //标题栏背景(顶部圆角与对话框一致)
+			r := image.Rectangle{Max: gtx.Constraints.Min}
+			paint.FillShape(gtx.Ops, dlgTitleBarBg, clip.RRect{Rect: r, NW: 8, NE: 8}.Op(gtx.Ops))
 			return D{Size: gtx.Constraints.Min}
 		},
 		func(gtx C) D {
@@ -287,8 +293,9 @@ func (m *MessageBox) layoutTitleBar(gtx layout.Context) D {
 					gtx.Constraints.Min = image.Pt(size, size)
 					gtx.Constraints.Max = gtx.Constraints.Min
 					hovered := m.closeBtn.Hovered()
-					if hovered { //悬停画红色背景
-						paint.FillShape(gtx.Ops, dlgCloseHoverBg, clip.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Op())
+					if hovered { //悬停画红色背景(右上角与对话框圆角一致)
+						r := image.Rectangle{Max: gtx.Constraints.Min}
+						paint.FillShape(gtx.Ops, dlgCloseHoverBg, clip.RRect{Rect: r, NE: 8}.Op(gtx.Ops))
 					}
 					return m.closeBtn.Layout(gtx, func(gtx C) D {
 						iconColor := dlgTitleFg
@@ -362,7 +369,9 @@ func (m *MessageBox) layoutBody(gtx layout.Context) D {
 			layout.Rigid(func(gtx layout.Context) D {
 				return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) D {
 					var d D
-					dp := gtx.Dp(142) //预留标题栏+按钮区+边距的高度
+					//预留高度 = 标题栏32 + 正文上下边距20 + 按钮区(上间距5+下间距10+按钮高)
+					btnH := gtx.Metric.SpToDp(m.Theme().TextSize)*1.2 + 10 //与下方按钮高度公式一致
+					dp := gtx.Dp(70 + btnH)
 					if m.content != nil {
 						//替换为自定义容器
 						d = m.content.Layout(gtx)
@@ -433,7 +442,7 @@ func (m *MessageBox) layoutBody(gtx layout.Context) D {
 						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
 					)
 				}
-				return layout.Inset{Top: unit.Dp(5)}.Layout(gtx, func(gtx layout.Context) D {
+				return layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(10)}.Layout(gtx, func(gtx layout.Context) D {
 					return layout.Flex{
 						Axis:      layout.Horizontal,
 						Alignment: layout.Middle,
